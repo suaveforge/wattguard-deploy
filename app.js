@@ -79,7 +79,7 @@ function homeView(){
 
     <section class="panel"><div class="panel-head"><div><h2>오늘 전력 흐름</h2><p>평소 범위와 오늘 사용량을 겹쳐 봅니다.</p></div><a href="#/history">자세히</a></div>${chartSvg(analysis.rows)}</section>
 
-    <section class="panel explain"><h2>왜 알렸나요?</h2>${whyText(analysis)}</section>
+    <section class="panel explain"><h2>왜 알렸나요?</h2>${whyText(analysis)}<div class="evidence-inline"><h3>숫자와 판단의 근거</h3>${evidenceMini(evidenceFor(['market_growth','refrigeration','case_savings','energy_burden','anomaly_detection']).slice(0,3))}<a class="secondary evidence-more" href="#/evidence">Evidence 전체 보기</a></div></section>
 
     <section class="panel"><h2>먼저 확인해 보세요</h2>${analysis.causes.length?`<ol class="check-list">${analysis.causes.slice(0,4).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ol>`:'<p class="muted">현재는 평소 범위라 점검할 항목이 없습니다.</p>'}
       ${analysis.level!=='NORMAL'?`<div class="action-row"><a class="secondary wide" href="#/detail">이상 상세보기</a><button class="primary wide" id="action-complete">확인·조치 완료</button></div>`:''}
@@ -167,7 +167,7 @@ function evidenceCard(e){
   const sourceLink=e.url?`<a class="source-button" href="${escapeAttr(e.url)}" target="_blank" rel="noopener noreferrer">원출처 열기 ↗</a>`:'<span class="source-button disabled">내부 제품 규칙</span>';
   return `<article class="evidence-card" id="ev-${escapeAttr(e.id)}" data-evidence-id="${escapeAttr(e.id)}">
     <div class="evidence-card-head"><div><span class="source-type">${escapeHtml(e.source_type)}</span>${scopeBadge(e.scope)}</div><code>${escapeHtml(e.id)}</code></div>
-    <h2>${escapeHtml(e.title)}</h2><p class="claim">${escapeHtml(e.claim)}</p>
+    <h2>${escapeHtml(e.title)}</h2>${e.highlight?`<div class="evidence-highlight"><b>${escapeHtml(e.highlight.value)}</b><span>${escapeHtml(e.highlight.label)}</span></div>`:''}<p class="claim">${escapeHtml(e.claim)}</p>
     <dl class="evidence-meta"><div><dt>발행</dt><dd>${escapeHtml(e.publisher)} · ${e.year}</dd></div>${e.authors?`<div><dt>저자/기관</dt><dd>${escapeHtml(e.authors)}</dd></div>`:''}${e.doi?`<div><dt>DOI</dt><dd>${escapeHtml(e.doi)}</dd></div>`:''}<div><dt>Evidence level</dt><dd>${escapeHtml(e.evidence_level)}</dd></div><div><dt>검증일</dt><dd>${escapeHtml(e.verified_at)}</dd></div></dl>
     <div class="implication"><b>와트가드에는 이렇게 적용</b><p>${escapeHtml(e.product_implication)}</p></div>
     <div class="limitation"><b>한계 / 과장 금지선</b><p>${escapeHtml(e.limitations)}</p></div>
@@ -180,7 +180,7 @@ function evidenceView(){
   const groups=Object.keys(EVIDENCE_CATEGORIES).map(key=>`<button class="evidence-filter" data-ev-filter="${key}"><span>${EVIDENCE_CATEGORIES[key]}</span><b>${categoryCount(key)}</b></button>`).join('');
   const cards=EVIDENCE_REGISTRY.map(e=>evidenceCard(e)).join('');
   setTimeout(()=>{if(hashId){document.querySelector(`[data-evidence-id="${CSS.escape(hashId)}"]`)?.scrollIntoView({behavior:'smooth',block:'start'});}},0);
-  return appShell(`<section class="page-title evidence-title"><div><span class="eyebrow">Evidence registry · verified 2026-10-01</span><h1>왜 이 신호를 보고,<br>왜 이렇게 판단하나요?</h1><p>시장자료 · 연구근거 · 현재 구현 · 향후 계획 · 안전경계를 섞지 않고 각각 추적합니다.</p></div><div class="evidence-summary"><b>${EVIDENCE_REGISTRY.length}</b><span>등록 근거</span><small>외부 출처 + 제품 규칙</small></div></section>
+  return appShell(`<section class="page-title evidence-title"><div><span class="eyebrow">Evidence registry · verified 2026-10-02</span><h1>왜 이 신호를 보고,<br>왜 이렇게 판단하나요?</h1><p>시장자료 · 연구근거 · 현재 구현 · 향후 계획 · 안전경계를 섞지 않고 각각 추적합니다.</p></div><div class="evidence-summary"><b>${EVIDENCE_REGISTRY.length}</b><span>등록 근거</span><small>외부 출처 + 제품 규칙</small></div></section>
     <section class="evidence-principles"><div><b>원출처 우선</b><span>외부 수치에는 출처를 붙입니다.</span></div><div><b>원인 확정 금지</b><span>설비 고장이 아니라 점검 우선순위입니다.</span></div><div><b>구현과 계획 분리</b><span>현재 연결된 것과 향후 연동을 구분합니다.</span></div></section>
     <section class="evidence-filters"><button class="evidence-filter active" data-ev-filter="ALL"><span>전체</span><b>${EVIDENCE_REGISTRY.length}</b></button>${groups}</section>
     <section class="evidence-list" id="evidence-list">${cards}</section>`);
