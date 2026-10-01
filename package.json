@@ -1,0 +1,1 @@
+{"name":"wattguard-mvp","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs","capture":"node tools/live-capture.cjs"}}
