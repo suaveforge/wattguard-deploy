@@ -1,4 +1,4 @@
-const CACHE='wattguard-p0-20261002-slow-intro-audio-4';
+const CACHE='wattguard-p0-20261002-zero-leak-copy-5';
 const CORE=['./','./index.html','./app.css','./app.js','./engine.js','./evidence-registry.js','./manifest.webmanifest','./assets/icon.svg','./assets/icons/app-icon-192.png','./assets/icons/app-icon-512.png','./assets/icons/state-normal.webp','./assets/icons/state-drift.webp','./assets/icons/state-attention.webp','./assets/icons/state-recovered.webp'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
