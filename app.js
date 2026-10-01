@@ -9,6 +9,7 @@ const kw = (n) => `${Number(n||0).toFixed(2)} kW`;
 const pct = (n) => `${n>=0?'+':''}${Number(n||0).toFixed(1)}%`;
 const brandIcon = (stateName='normal', cls='') => `<img class="brand-icon ${cls}" src="./assets/icons/state-${stateName}.webp" alt="">`;
 const delay = (ms) => new Promise(resolve=>setTimeout(resolve,ms));
+const CAPTURE_AUTO = new URLSearchParams(location.search).get('capture') === '1';
 
 const DEFAULT_STORE={id:'store-mokdong-demo',name:'목동 데모카페',type:'카페',openTime:'09:00',closeTime:'22:00',holidays:[0],pricePerKwh:190};
 const state = {
@@ -264,11 +265,25 @@ async function captureShowCaption(caption,hold=1000,position='bottom'){
   captureRemoveCaption();
   return live+1500;
 }
-function showCaptureSplash({icon='normal',scene,title='',subtitle='',theme='dark',footer=''}){
+function showCaptureSplash({icon='normal',scene,title='',subtitle='',theme='dark',footer=''}) {
   const root=$('#app');
   captureRemoveCaption();
   root.innerHTML=`<section class="capture-splash ${theme}"><div class="capture-splash-inner">${brandIcon(icon,'capture-splash-icon')}<div class="capture-splash-copy"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div>${footer?`<div class="capture-splash-footer">${escapeHtml(footer)}</div>`:''}</div></section>`;
   setCaptureMeta(scene,'');
+}
+async function captureSplashStage(opts,{fadeIn=600,hold=850,fadeOut=350}={}){
+  showCaptureSplash(opts);
+  const inner=$('.capture-splash-inner');
+  if(!inner){await delay(fadeIn+hold+fadeOut);return;}
+  inner.classList.add('capture-stage-enter');
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  inner.style.setProperty('--capture-stage-in',fadeIn+'ms');
+  inner.style.setProperty('--capture-stage-out',fadeOut+'ms');
+  inner.classList.add('capture-stage-show');
+  await delay(fadeIn+hold);
+  inner.classList.add('capture-stage-leave');
+  inner.classList.remove('capture-stage-show');
+  await delay(fadeOut);
 }
 function showCaptureApp(viewFn,route,scene){
   captureRemoveCaption();
@@ -297,15 +312,16 @@ async function runCaptureTour(){
   captureRunning=true;
   const snapshot=captureSnapshot();
   window.__WATTGUARD_CAPTURE_DONE__=false;
+  window.__WATTGUARD_CAPTURE_AUTO_STARTED__=true;
   document.body.classList.add('capture-mode','capture-tour-active');
   try{
     state.store={...DEFAULT_STORE,name:'와트가드 데모매장',type:'무인점포'};
     state.actions=[];state.alerts=[];
-    $('#app').innerHTML='<section class="capture-splash dark capture-black"></section>'; setCaptureMeta('intro-black',''); await delay(300);
-    showCaptureSplash({icon:'normal',scene:'intro-normal',title:'',subtitle:'',theme:'dark'}); await delay(1300);
-    showCaptureSplash({icon:'drift',scene:'intro-drift',title:'평소와 다른 전력이',subtitle:'조용히 시작됩니다',theme:'dark'}); await delay(1200);
-    showCaptureSplash({icon:'attention',scene:'intro-attention',title:'와트가드',subtitle:'새는 전력을 먼저 발견합니다',theme:'dark',footer:'평소 → 벗어남 → 확인 필요'}); await delay(1200);
-    $('#app').innerHTML='<section class="capture-splash dark capture-black"></section>'; setCaptureMeta('intro-to-app',''); await delay(200);
+    $('#app').innerHTML='<section class="capture-splash dark capture-black"></section>'; setCaptureMeta('intro-black',''); await delay(320);
+    await captureSplashStage({icon:'normal',scene:'intro-normal',title:'',subtitle:'',theme:'dark'},{fadeIn:700,hold:900,fadeOut:350});
+    await captureSplashStage({icon:'drift',scene:'intro-drift',title:'평소와 다른 전력이',subtitle:'조용히 시작됩니다',theme:'dark'},{fadeIn:500,hold:750,fadeOut:300});
+    await captureSplashStage({icon:'attention',scene:'intro-attention',title:'와트가드',subtitle:'새는 전력을 먼저 발견합니다',theme:'dark',footer:'평소 → 벗어남 → 확인 필요'},{fadeIn:500,hold:950,fadeOut:400});
+    $('#app').innerHTML='<section class="capture-splash dark capture-black"></section>'; setCaptureMeta('intro-to-app',''); await delay(260);
 
     state.scenario='A';state.demoStep='full';
     await showCaptureAppScene(learningView,'learning','14일의 평소 패턴을 먼저 학습합니다','learning-baseline',900,'bottom');
@@ -361,7 +377,20 @@ function onboarding(){
 
 function render(){
   document.body.classList.toggle('capture-mode',state.route==='demo-capture');
-  if(state.route==='demo-capture'){ $('#app').innerHTML=captureView(); bind(); return; }
+  if(state.route==='demo-capture'){
+    if(CAPTURE_AUTO){
+      $('#app').innerHTML='<section class="capture-splash dark capture-black"></section>';
+      setCaptureMeta('capture-boot','');
+      if(!window.__WATTGUARD_CAPTURE_AUTO_QUEUED__){
+        window.__WATTGUARD_CAPTURE_AUTO_QUEUED__=true;
+        requestAnimationFrame(()=>setTimeout(()=>runCaptureTour(),80));
+      }
+    }else{
+      $('#app').innerHTML=captureView();
+      bind();
+    }
+    return;
+  }
   if(!state.store){onboarding();return;}
   const views={home:homeView,detail:detailView,history:historyView,alerts:alertsView,settings:settingsView,demo:demoView,evidence:evidenceView,learning:learningView};
   $('#app').innerHTML=(views[state.route]||homeView)(); bind();
