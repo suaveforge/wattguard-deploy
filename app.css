@@ -62,3 +62,274 @@
   .evi-saving-arrow{width:58px;height:58px;border-radius:18px;font-size:36px}.evi-saving b{font-size:24px}
   .evi-odds article{grid-template-columns:68px 1fr 48px}
 }
+
+
+/* WattGuard impact UX v2 · KIMSE-paced captions */
+.status-card{
+  position:relative;
+  overflow:hidden;
+  transition:border-color .35s ease,box-shadow .35s ease,background .35s ease;
+}
+.status-card::before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:5px;
+  background:#58a58f;
+  opacity:.75;
+}
+.status-card.watch{
+  border-color:#efd18e;
+  background:linear-gradient(145deg,#fffaf0 0%,#fff 72%);
+  box-shadow:0 12px 30px rgba(174,116,0,.09);
+}
+.status-card.watch::before{background:#e3a323;opacity:1}
+.status-card.attention{
+  border-color:#efb0a7;
+  background:linear-gradient(145deg,#fff3f0 0%,#fff 72%);
+  box-shadow:0 15px 34px rgba(181,60,47,.12);
+}
+.status-card.attention::before{background:#d95746;opacity:1}
+.status-card.normal.recovered{
+  border-color:#a9ddca;
+  background:linear-gradient(145deg,#eaf9f3 0%,#fff 76%);
+  box-shadow:0 14px 34px rgba(22,117,95,.12);
+  animation:wattguardRecoveredCard 1.15s cubic-bezier(.2,.8,.2,1) 1;
+}
+.status-card .status-row h1{
+  transition:color .25s ease,transform .25s ease;
+}
+.status-card.watch .status-row h1{color:#9a6500}
+.status-card.attention .status-row h1{
+  color:#b53c2f;
+  font-size:clamp(30px,7vw,40px);
+  letter-spacing:-.055em;
+}
+.status-orb{
+  position:relative;
+  overflow:visible;
+  transform-origin:center;
+}
+.status-orb>span{position:relative;z-index:2}
+.status-card.watch .status-orb{
+  box-shadow:0 0 0 0 rgba(227,163,35,.34);
+  animation:wattguardWarnPulse 1.55s ease-in-out infinite;
+}
+.status-card.attention .status-orb{
+  box-shadow:0 0 0 0 rgba(217,87,70,.38);
+  animation:wattguardAttentionPulse 1.2s ease-in-out infinite;
+}
+.status-card.normal.recovered .status-orb{
+  animation:wattguardRecoveredOrb 1.05s cubic-bezier(.2,.8,.2,1) 1;
+}
+.impact-loss{
+  position:relative;
+  overflow:hidden;
+  border-color:rgba(217,87,70,.2);
+}
+.attention .impact-loss{
+  background:linear-gradient(110deg,rgba(255,255,255,.94),rgba(255,228,222,.92),rgba(255,255,255,.94));
+  background-size:220% 100%;
+  animation:wattguardLossSweep 2.2s ease-in-out infinite;
+}
+.impact-loss .impact-number{
+  color:#b53c2f;
+  font-size:clamp(30px,7vw,38px);
+  letter-spacing:-.055em;
+  text-shadow:0 1px 0 rgba(255,255,255,.8);
+  animation:wattguardNumberPop .52s cubic-bezier(.18,.86,.32,1.25) both;
+}
+.metric{
+  position:relative;
+  overflow:hidden;
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease,background .25s ease;
+}
+.metric strong{transition:color .25s ease,transform .25s ease}
+.metric.baseline-metric{background:#fafcfb}
+.metric.impact-current{
+  border-color:#ecc0b8;
+  background:linear-gradient(145deg,#fff8f6,#fff);
+  box-shadow:0 9px 22px rgba(181,60,47,.07);
+}
+.metric.impact-delta{
+  border-color:#e8b4ab;
+  background:linear-gradient(145deg,#fff1ee,#fff);
+  box-shadow:0 10px 24px rgba(181,60,47,.09);
+}
+.metric.impact-delta strong,
+.metric.impact-current strong{color:#b53c2f}
+.metric.impact-delta strong{
+  font-size:clamp(25px,6vw,32px);
+  animation:wattguardNumberPop .52s cubic-bezier(.18,.86,.32,1.25) both;
+}
+.metric.impact-cost{
+  border-color:#f0cf99;
+  background:linear-gradient(145deg,#fff8e9,#fff);
+}
+.metric.impact-cost strong{
+  color:#9a6200;
+  font-weight:950;
+}
+.metric.impact-cost.monthly{
+  border-color:#e5a69c;
+  background:linear-gradient(145deg,#fff0ed,#fff9f7);
+}
+.metric.impact-cost.monthly strong{color:#ad382c}
+.metric.impact-normal{
+  border-color:#bde4d5;
+  background:linear-gradient(145deg,#edf9f5,#fff);
+}
+.metric.impact-normal strong{color:#116a55}
+.metric-grid-alert .metric:nth-child(1),
+.metric-grid-alert .metric:nth-child(3),
+.metric-grid-alert .metric:nth-child(4){
+  animation:wattguardMetricRise .48s ease both;
+}
+.metric-grid-alert .metric:nth-child(3){animation-delay:.08s}
+.metric-grid-alert .metric:nth-child(4){animation-delay:.16s}
+.why-alert .baseline-value{
+  color:#45655c;
+  background:#eef4f2;
+  border-radius:7px;
+  padding:1px 5px;
+}
+.why-alert .current-value,
+.why-alert .duration-value{
+  color:#b53c2f;
+  background:#fff0ed;
+  border-radius:7px;
+  padding:1px 5px;
+  box-shadow:inset 0 -2px 0 rgba(181,60,47,.12);
+}
+.why-stats .delta-value,
+.why-stats .waste-value{
+  color:#b53c2f;
+  font-size:17px;
+  letter-spacing:-.03em;
+}
+.why-normal .normal-word{
+  color:#116a55;
+  background:#e8f7f1;
+  border-radius:7px;
+  padding:1px 6px;
+}
+.chart-wrap.has-anomaly{
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(255,250,248,.65),rgba(255,255,255,0));
+}
+.chart-wrap.has-anomaly .actual{
+  stroke:#a9362c;
+  stroke-width:3.4;
+}
+.chart-wrap.has-anomaly .anomaly-dot{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:wattguardDotPulse 1.35s ease-in-out infinite;
+}
+.check-list li:first-child{
+  font-weight:850;
+  color:#243c35;
+  background:#fff8e9;
+  border:1px solid #f1d8a8;
+  border-radius:10px;
+  padding:2px 9px 2px 5px;
+}
+.attention + .metric-grid .metric,
+.detail-status.attention + .metric-grid .metric{
+  will-change:transform;
+}
+.decision-trace>div:nth-child(2),
+.decision-trace>div:nth-child(3),
+.decision-trace>div:nth-child(5){
+  background:#fff4f1;
+  border-color:#edc3bc;
+}
+.decision-trace>div:nth-child(2) b,
+.decision-trace>div:nth-child(3) b,
+.decision-trace>div:nth-child(5) b{color:#b53c2f}
+
+/* KIMSE submission-video caption timing:
+   1.5s ease in, min 1.4s live, 1.5s ease out. */
+.capture-tour-active #app::after{
+  content:none;
+}
+.capture-tour-active #app.capture-caption-active::after{
+  content:attr(data-capture-caption);
+  position:fixed;
+  top:var(--capture-caption-top);
+  bottom:auto;
+  left:50%;
+  width:max-content;
+  max-width:calc(100% - 36px);
+  padding:9px 14px 10px;
+  border-radius:10px;
+  background:rgba(0,0,0,.86);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,.24);
+  font-size:18px;
+  line-height:1.35;
+  font-weight:850;
+  text-align:center;
+  letter-spacing:-.01em;
+  white-space:normal;
+  pointer-events:none;
+  z-index:32000;
+  opacity:0;
+  transform:translateX(-50%) translateY(8px);
+  transition:opacity 1.5s ease,transform 1.5s ease;
+}
+.capture-tour-active #app.capture-caption-active.capture-caption-show::after{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.capture-tour-active #app.caption-top::after{max-width:calc(100% - 42px)}
+.capture-tour-active .status-card.attention .status-orb,
+.capture-tour-active .metric.impact-delta strong,
+.capture-tour-active .impact-loss .impact-number{
+  animation-play-state:running;
+}
+
+@keyframes wattguardWarnPulse{
+  0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(227,163,35,.34)}
+  50%{transform:scale(1.055);box-shadow:0 0 0 9px rgba(227,163,35,0)}
+}
+@keyframes wattguardAttentionPulse{
+  0%,100%{transform:scale(1);filter:brightness(1);box-shadow:0 0 0 0 rgba(217,87,70,.40)}
+  50%{transform:scale(1.08);filter:brightness(1.08);box-shadow:0 0 0 12px rgba(217,87,70,0)}
+}
+@keyframes wattguardRecoveredOrb{
+  0%{transform:scale(.86);box-shadow:0 0 0 0 rgba(22,117,95,.34)}
+  60%{transform:scale(1.08);box-shadow:0 0 0 13px rgba(22,117,95,0)}
+  100%{transform:scale(1);box-shadow:0 0 0 0 rgba(22,117,95,0)}
+}
+@keyframes wattguardRecoveredCard{
+  0%{transform:translateY(3px);filter:saturate(.85)}
+  65%{transform:translateY(0);filter:saturate(1.08)}
+  100%{filter:saturate(1)}
+}
+@keyframes wattguardLossSweep{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+@keyframes wattguardNumberPop{
+  0%{opacity:.25;transform:scale(.88) translateY(3px)}
+  75%{opacity:1;transform:scale(1.055) translateY(0)}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes wattguardMetricRise{
+  from{opacity:.55;transform:translateY(7px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes wattguardDotPulse{
+  0%,100%{opacity:.7;transform:scale(.9)}
+  50%{opacity:1;transform:scale(1.55)}
+}
+@media(prefers-reduced-motion:reduce){
+  .status-card,.status-orb,.impact-loss,.impact-number,.metric,.metric strong,.anomaly-dot{
+    animation:none!important;
+    transition:none!important;
+  }
+  .capture-tour-active #app.capture-caption-active::after{
+    transition:opacity .2s linear!important,transform .2s linear!important;
+  }
+}
