@@ -346,14 +346,14 @@ async function runCaptureTour(){
     document.body.classList.remove('capture-tour-active');
     showCaptureSplash({icon:'attention',scene:'outro-attention',title:'낭비를 발견하고',subtitle:'원인 후보와 점검 순서를 확인합니다',theme:'light'}); await delay(1600);
     showCaptureSplash({icon:'drift',scene:'outro-drift',title:'조치한 뒤 다시 확인하고',subtitle:'평소 패턴으로 돌아오는지 지켜봅니다',theme:'light'}); await delay(1200);
-    showCaptureSplash({icon:'recovered',scene:'outro-recovered',title:'다시, 평소대로',subtitle:'와트가드가 새는 전력의 시작을 먼저 살핍니다',theme:'light',footer:'평소 → 변화 감지 → 점검 → 정상 복귀'}); await delay(3200);
+    showCaptureSplash({icon:'recovered',scene:'outro-recovered',title:'새는 전력, 다시 0으로.',subtitle:'와트가드가 낭비가 시작되는 순간부터 먼저 살핍니다',theme:'light',footer:'감지 → 점검 → 조치 → 전력 누수 0'}); await delay(3400);
   } finally {
     restoreCaptureSnapshot(snapshot);
     state.route='demo-capture';
     document.body.classList.remove('capture-tour-active');
     const root=$('#app');
     root.dataset.captureScene='outro-recovered';
-    root.dataset.captureCaption='다시, 평소대로';
+    root.dataset.captureCaption='새는 전력, 다시 0으로.';
     root.dataset.captureState='complete';
     window.__WATTGUARD_CAPTURE_DONE__=true;
     captureRunning=false;
