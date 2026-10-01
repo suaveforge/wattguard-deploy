@@ -386,3 +386,32 @@
     animation:none!important;transform:none!important;
   }
 }
+
+
+/* WattGuard intro crossfade v1 */
+.capture-splash-inner.capture-stage-enter{
+  opacity:0;
+  transform:scale(.988);
+  filter:brightness(.92);
+  transition:
+    opacity var(--capture-stage-in,600ms) ease,
+    transform var(--capture-stage-in,600ms) cubic-bezier(.2,.7,.2,1),
+    filter var(--capture-stage-in,600ms) ease;
+}
+.capture-splash-inner.capture-stage-enter.capture-stage-show{
+  opacity:1;
+  transform:scale(1);
+  filter:brightness(1);
+}
+.capture-splash-inner.capture-stage-enter.capture-stage-leave{
+  transition:
+    opacity var(--capture-stage-out,350ms) ease,
+    transform var(--capture-stage-out,350ms) ease,
+    filter var(--capture-stage-out,350ms) ease;
+  opacity:0;
+  transform:scale(.995);
+  filter:brightness(.82);
+}
+.capture-splash-inner.capture-stage-enter .capture-splash-icon{
+  animation:none!important;
+}
