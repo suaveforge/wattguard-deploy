@@ -333,3 +333,56 @@
     transition:opacity .2s linear!important,transform .2s linear!important;
   }
 }
+
+
+/* WattGuard capture scene focus v1 */
+.capture-tour-active #app[data-capture-scene="home-normal"] .metric.impact-normal,
+.capture-tour-active #app[data-capture-scene="anomaly-start"] .metric.impact-current,
+.capture-tour-active #app[data-capture-scene="anomaly-watch"] .metric.impact-delta,
+.capture-tour-active #app[data-capture-scene="anomaly-attention"] .impact-loss,
+.capture-tour-active #app[data-capture-scene="anomaly-attention"] .metric.impact-cost,
+.capture-tour-active #app[data-capture-scene="detail-top"] .decision-trace,
+.capture-tour-active #app[data-capture-scene="detail-evidence"] .evidence-inline,
+.capture-tour-active #app[data-capture-scene="evidence-registry"] .evidence-card,
+.capture-tour-active #app[data-capture-scene="home-recovered"] .status-card.recovered{
+  position:relative;
+  z-index:3;
+  animation:wattguardSceneSpot 1.65s cubic-bezier(.2,.72,.22,1) both;
+}
+.capture-tour-active #app[data-capture-scene="anomaly-start"] .metric-grid .metric:not(.impact-current),
+.capture-tour-active #app[data-capture-scene="anomaly-watch"] .metric-grid .metric:not(.impact-delta){
+  opacity:.58;
+  filter:saturate(.7);
+  transform:scale(.985);
+}
+.capture-tour-active #app[data-capture-scene="anomaly-attention"] .metric.baseline-metric{
+  opacity:.62;
+}
+.capture-tour-active #app[data-capture-scene="anomaly-attention"] .status-card.attention .status-orb{
+  animation:wattguardAttentionPulse 1.05s ease-in-out infinite;
+}
+.capture-tour-active #app[data-capture-scene="detail-top"] .decision-trace>div:nth-child(2),
+.capture-tour-active #app[data-capture-scene="detail-top"] .decision-trace>div:nth-child(3),
+.capture-tour-active #app[data-capture-scene="detail-top"] .decision-trace>div:nth-child(5){
+  animation:wattguardTracePop .5s ease both;
+}
+.capture-tour-active #app[data-capture-scene="detail-top"] .decision-trace>div:nth-child(3){animation-delay:.1s}
+.capture-tour-active #app[data-capture-scene="detail-top"] .decision-trace>div:nth-child(5){animation-delay:.2s}
+@keyframes wattguardSceneSpot{
+  0%{transform:scale(.985);box-shadow:0 0 0 0 rgba(181,60,47,0)}
+  45%{transform:scale(1.012);box-shadow:0 0 0 4px rgba(181,60,47,.10),0 14px 34px rgba(35,65,55,.12)}
+  100%{transform:scale(1);box-shadow:0 10px 28px rgba(35,65,55,.08)}
+}
+@keyframes wattguardTracePop{
+  from{opacity:.55;transform:translateX(-5px)}
+  to{opacity:1;transform:translateX(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .capture-tour-active #app[data-capture-scene] .metric,
+  .capture-tour-active #app[data-capture-scene] .impact-loss,
+  .capture-tour-active #app[data-capture-scene] .decision-trace,
+  .capture-tour-active #app[data-capture-scene] .evidence-inline,
+  .capture-tour-active #app[data-capture-scene] .evidence-card{
+    animation:none!important;transform:none!important;
+  }
+}
