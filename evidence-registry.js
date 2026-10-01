@@ -30,7 +30,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'공공기관 공식 서비스 자료', verified_at:'2026-10-01', status:'verified', scope:'향후 계획'
   },
   {
-    id:'MARKET-KEA-2026-001', category:'MARKET', highlight:{value:'최대 70%',label:'고효율설비 설치비 지원'},
+    id:'MARKET-KEA-2026-001', category:'MARKET', highlight:{value:'최대 70%',label:'고효율설비 설치비 지원'}, visual:{type:'donut',value:70,center:'70%',label:'설치비 지원 한도',note:'지정 고효율설비 · 사업공고 기준'},
     claim:'2026년 한국에너지공단은 소상공인 에너지효율향상 지원사업을 공고했고, 지정 고효율설비 설치비의 최대 70%를 지원 대상으로 제시했다.',
     title:'2026년 소상공인 에너지효율향상 지원사업 공고', publisher:'한국에너지공단', authors:'한국에너지공단', year:2026,
     source_type:'공공기관 사업공고', url:'https://www.energy.or.kr/front/board/View2.do?boardMngNo=2&boardNo=24521', doi:'',
@@ -40,7 +40,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'공공기관 공식 공고', verified_at:'2026-10-01', status:'verified', scope:'시장근거'
   },
   {
-    id:'MARKET-GMR-2024-001', category:'MARKET', highlight:{value:'18배',label:'무인편의점 최근 4년 증가'},
+    id:'MARKET-GMR-2024-001', category:'MARKET', highlight:{value:'18배',label:'무인편의점 최근 4년 증가'}, visual:{type:'bars',items:[{label:'4년 전',value:1,display:'1×'},{label:'최근',value:18,display:'18×'}],label:'무인편의점 증가',note:'경기도시장상권진흥원 · 최근 4년'},
     claim:'경기도시장상권진흥원 자료는 2023년 전국 무인점포 약 6,300개, 그중 경기도 31.9%를 제시하고 무인편의점이 최근 4년간 18배 이상 증가했다고 보고했다.',
     title:'경기도 소상공인 경제 이슈 브리프 「무인점포의 현황과 전망」 관련 보도자료', publisher:'경기도시장상권진흥원', authors:'경기도시장상권진흥원 상권정책연구팀', year:2024,
     source_type:'공공기관 시장자료', url:'https://www.gmr.or.kr/storage/board/gallery/2024/11/16/GALLERY_ATTACH_1731745381242.pdf', doi:'',
@@ -60,7 +60,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'중앙행정기관 공식자료', verified_at:'2026-10-01', status:'verified', scope:'시장근거'
   },
   {
-    id:'MARKET-SMROADMAP-2023-001', category:'MARKET', highlight:{value:'CAGR 51.0%',label:'무인점포 지원 솔루션 국내시장 전망 · 2021~2027'},
+    id:'MARKET-SMROADMAP-2023-001', category:'MARKET', highlight:{value:'CAGR 51.0%',label:'무인점포 지원 솔루션 국내시장 전망 · 2021~2027'}, visual:{type:'trend',startLabel:'2021',startValue:25.6,startDisplay:'25.6조원',endLabel:'2027',endValue:303.6,endDisplay:'303.6조원',badge:'CAGR 51.0%',note:'전망치 · 실제 관측값과 구분'},
     claim:'중소기업 전략기술로드맵은 ‘소상공인 무인점포 지원 솔루션’을 전략품목으로 다루며, 관련 국내 시장을 2021~2027년 연평균 51.0% 성장으로 전망한다.',
     title:'중소기업 전략기술로드맵 — 소상공인 무인점포 지원 솔루션', publisher:'중소기업 기술로드맵', authors:'중소벤처기업부·중소기업기술정보진흥원 계열 로드맵', year:2023,
     source_type:'정부 전략기술 로드맵', url:'https://smroadmap.smtech.go.kr/mpsvc/dtrprt/mpsvcDtrprtDetail.do?cmIdx=3881&cmYyyy=2023', doi:'',
@@ -71,7 +71,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
   },
 
   {
-    id:'MARKET-FTC-2024-001', category:'MARKET', highlight:{value:'365,014개',label:'전국 가맹점 · 전년 대비 +3.4%'},
+    id:'MARKET-FTC-2024-001', category:'MARKET', highlight:{value:'365,014개',label:'전국 가맹점 · 전년 대비 +3.4%'}, visual:{type:'stats',items:[{value:'365,014개',label:'전국 가맹점'},{value:'+3.4%',label:'전년 대비 증가'}],note:'공정거래위원회 · 2024년 가맹사업 현황'},
     claim:'공정거래위원회 2024년 가맹사업 현황은 전체 가맹점 수 365,014개를 제시하고, 전년 대비 가맹점 수가 3.4% 증가했다고 발표했다.',
     title:'2024년 가맹사업 현황 통계 발표', publisher:'공정거래위원회', authors:'가맹거래정책과', year:2025,
     source_type:'정부 공식 통계', url:'https://www.ftc.go.kr/www/selectBbsNttView.do?bordCd=3&key=12&nttSn=45987', doi:'',
@@ -81,7 +81,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'중앙행정기관 공식 통계', verified_at:'2026-10-02', status:'verified', scope:'시장근거'
   },
   {
-    id:'TECH-ENERGYSTAR-CSTORE-001', category:'TECH', highlight:{value:'최대 40%',label:'편의점 에너지 중 냉장·냉동 비중'},
+    id:'TECH-ENERGYSTAR-CSTORE-001', category:'TECH', highlight:{value:'최대 40%',label:'편의점 에너지 중 냉장·냉동 비중'}, visual:{type:'donut',value:40,center:'40%',label:'냉장·냉동',note:'편의점 총 에너지 사용 중 최대 비중'},
     claim:'ENERGY STAR는 편의점에서 냉장·냉동이 건물 전체 에너지 사용의 최대 40%를 차지할 수 있다고 설명한다.',
     title:'Energy Savings Tips for Small Businesses: Convenience Stores', publisher:'ENERGY STAR / U.S. EPA', authors:'ENERGY STAR', year:2026,
     source_type:'공공기관 기술가이드', url:'https://www.energystar.gov/buildings/resources-audience/small-biz/convenience-stores', doi:'',
@@ -91,7 +91,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'공공기관 기술가이드', verified_at:'2026-10-02', status:'verified', scope:'연구근거'
   },
   {
-    id:'CASE-GSRETAIL-2024-001', category:'CASE', highlight:{value:'2,447 kWh/년',label:'오픈 쇼케이스 야간 커버 적용 후 전력 감소'},
+    id:'CASE-GSRETAIL-2024-001', category:'CASE', highlight:{value:'2,447 kWh/년',label:'오픈 쇼케이스 야간 커버 적용 후 전력 감소'}, visual:{type:'saving',value:'2,447 kWh',period:'/년',label:'전력 사용 감소',note:'오픈 쇼케이스 야간 커버 적용 사례'},
     claim:'GS리테일 2024 지속가능경영보고서는 편의점 오픈 쇼케이스에 야간 커버를 적용해 연간 전력 사용량 2,447kWh를 줄인 사례를 제시한다.',
     title:'GS Retail Sustainability Report 2024 — Environmental Management Performance', publisher:'GS리테일', authors:'GS Retail', year:2024,
     source_type:'기업 지속가능경영 보고서', url:'https://hpimg.gsretail.com/_ui/desktop/common/docs/gsr_sustainability_report_2024_eng.pdf', doi:'',
@@ -101,7 +101,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'기업 공개 실적 사례', verified_at:'2026-10-02', status:'verified', scope:'실증사례'
   },
   {
-    id:'CASE-SHARIS-001', category:'CASE', highlight:{value:'$2,204/년',label:'점포 1곳 · 온수 설정 조정 사례'},
+    id:'CASE-SHARIS-001', category:'CASE', highlight:{value:'$2,204/년',label:'점포 1곳 · 온수 설정 조정 사례'}, visual:{type:'saving',value:'$2,204',period:'/년',label:'점포당 절감',note:'온수 설정 155°F → 140°F'},
     claim:'미국 DOE Better Buildings에 공개된 Shari’s 사례는 주방 온수기 설정을 155°F에서 140°F로 조정해 점포당 연간 약 2,204달러를 절감할 수 있음을 확인했다.',
     title:"As Easy as Pie: Shari's Cafe and Pies Drives Energy Savings through Employee Behavior Change", publisher:'U.S. DOE Better Buildings', authors:"Shari's Cafe & Pies / Better Buildings", year:2016,
     source_type:'정부 프로그램 공개 사례', url:'https://betterbuildingssolutioncenter.energy.gov/implementation-models/easy-pie-sharis-cafe-and-pies-drives-energy-savings-through-employee-behavior', doi:'',
@@ -111,7 +111,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'정부 프로그램 파트너 공개 사례', verified_at:'2026-10-02', status:'verified', scope:'실증사례'
   },
   {
-    id:'CASE-PECO-LANDHOPE-001', category:'CASE', highlight:{value:'$16,308/년',label:'편의점 종합 에너지 개선 사례'},
+    id:'CASE-PECO-LANDHOPE-001', category:'CASE', highlight:{value:'$16,308/년',label:'편의점 종합 에너지 개선 사례'}, visual:{type:'stats',items:[{value:'$16,308/년',label:'연간 비용 절감'},{value:'135,567 kWh',label:'연간 에너지 절감'}],note:'LED + 냉장모터 등 종합 개선 사례'},
     claim:'PECO의 Landhope Farms 편의점 사례는 LED 조명과 냉장모터 개선 등을 포함한 프로젝트에서 연간 16,308달러, 135,567kWh의 에너지 절감 실적을 제시한다.',
     title:'Energy Upgrades Increase Savings and Safety at Landhope Farms', publisher:'PECO', authors:'PECO Small Business Direct Install Solutions', year:2026,
     source_type:'전력사 프로그램 사례', url:'https://solutions.peco-energy.com/landhopefarms', doi:'',
@@ -121,7 +121,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'전력사 프로그램 공개 사례', verified_at:'2026-10-02', status:'verified', scope:'실증사례'
   },
   {
-    id:'IMPACT-JAMA-2025-001', category:'IMPACT', highlight:{value:'2.29× / 2.31×',label:'불안 / 우울 증상 odds · 에너지 불안정 경험군'},
+    id:'IMPACT-JAMA-2025-001', category:'IMPACT', highlight:{value:'2.29× / 2.31×',label:'불안 / 우울 증상 odds · 에너지 불안정 경험군'}, visual:{type:'odds',items:[{label:'비경험군',value:1,display:'1.00×'},{label:'불안 증상',value:2.29,display:'2.29×'},{label:'우울 증상',value:2.31,display:'2.31×'}],note:'미국 성인 관찰연구 · 점주 직접 연구 아님'},
     claim:'JAMA Network Open의 미국 성인 연구에서 에너지 불안정 경험은 사회적 요인을 보정한 뒤에도 불안 증상 odds 2.29, 우울 증상 odds 2.31과 연관됐다.',
     title:'Energy Insecurity and Mental Health Symptoms in US Adults', publisher:'JAMA Network Open', authors:'Michelle Graff; Ther W Aung', year:2025,
     source_type:'학술논문 · 전국 대표 반복 횡단면 조사', url:'https://pubmed.ncbi.nlm.nih.gov/41143792/', doi:'10.1001/jamanetworkopen.2025.39479',
@@ -141,7 +141,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
     evidence_level:'제품 안전경계', verified_at:'2026-10-01', status:'implemented', scope:'현재 구현'
   },
   {
-    id:'RULE-DURATION-001', category:'TECH',
+    id:'RULE-DURATION-001', category:'TECH', visual:{type:'timeline',value:'15분',label:'기본 분석 슬롯',note:'순간 튐보다 연속 지속시간을 함께 판단'},
     claim:'MVP는 순간 튐보다 지속되는 차이를 우선하기 위해 절대차이·상대차이와 함께 연속 지속시간을 판정축으로 사용한다.',
     title:'와트가드 baseline-v1 지속시간 판정 규칙', publisher:'와트가드', authors:'SuaveForge', year:2026,
     source_type:'제품 구현 규칙', url:'', doi:'',
