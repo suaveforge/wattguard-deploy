@@ -163,11 +163,41 @@ function evidenceMini(items){
 
 function categoryCount(key){return EVIDENCE_REGISTRY.filter(e=>e.category===key).length;}
 function scopeBadge(scope){return `<span class="scope-badge ${scope==='현재 구현'?'implemented':scope==='향후 계획'?'future':'reference'}">${escapeHtml(scope)}</span>`;}
+function evidenceVisual(e){
+  const v=e.visual;
+  if(!v) return e.highlight?`<div class="evidence-highlight"><b>${escapeHtml(e.highlight.value)}</b><span>${escapeHtml(e.highlight.label)}</span></div>`:'';
+  if(v.type==='bars'){
+    const max=Math.max(1,...v.items.map(x=>Number(x.value)||0));
+    return `<div class="evi-graphic evi-bars" role="img" aria-label="${escapeAttr(v.label||e.highlight?.label||'근거 인포그래픽')}"><div class="evi-bars-grid">${v.items.map(x=>`<div class="evi-bar-col"><b>${escapeHtml(x.display||x.value)}</b><div class="evi-bar-track"><i style="height:${Math.max(8,Math.round((Number(x.value)||0)/max*100))}%"></i></div><span>${escapeHtml(x.label)}</span></div>`).join('')}</div>${v.note?`<small>${escapeHtml(v.note)}</small>`:''}</div>`;
+  }
+  if(v.type==='trend'){
+    const ratio=Math.max(1,Math.min(100,Math.round((Number(v.startValue)||0)/(Number(v.endValue)||1)*100)));
+    return `<div class="evi-graphic evi-trend" role="img" aria-label="${escapeAttr(v.badge||'시장 전망 인포그래픽')}"><div class="evi-trend-head"><b>${escapeHtml(v.badge||'')}</b><span>${escapeHtml(v.note||'')}</span></div><div class="evi-trend-row"><div><span>${escapeHtml(v.startLabel)}</span><strong>${escapeHtml(v.startDisplay)}</strong><i style="width:${ratio}%"></i></div><em>→</em><div><span>${escapeHtml(v.endLabel)}</span><strong>${escapeHtml(v.endDisplay)}</strong><i style="width:100%"></i></div></div></div>`;
+  }
+  if(v.type==='donut'){
+    const p=Math.max(0,Math.min(100,Number(v.value)||0));
+    return `<div class="evi-graphic evi-donut-wrap" role="img" aria-label="${escapeAttr(v.center+' '+v.label)}"><div class="evi-donut" style="--pct:${p}"><div><b>${escapeHtml(v.center||p+'%')}</b><span>${escapeHtml(v.label||'')}</span></div></div><p>${escapeHtml(v.note||'')}</p></div>`;
+  }
+  if(v.type==='stats'){
+    return `<div class="evi-graphic evi-stats" role="img" aria-label="${escapeAttr(v.items.map(x=>x.value+' '+x.label).join(', '))}"><div>${v.items.map(x=>`<article><b>${escapeHtml(x.value)}</b><span>${escapeHtml(x.label)}</span></article>`).join('')}</div>${v.note?`<small>${escapeHtml(v.note)}</small>`:''}</div>`;
+  }
+  if(v.type==='saving'){
+    return `<div class="evi-graphic evi-saving" role="img" aria-label="${escapeAttr(v.value+' '+v.label)}"><span class="evi-saving-arrow">↓</span><div><b>${escapeHtml(v.value)}<small>${escapeHtml(v.period||'')}</small></b><strong>${escapeHtml(v.label||'')}</strong><p>${escapeHtml(v.note||'')}</p></div></div>`;
+  }
+  if(v.type==='odds'){
+    const max=Math.max(1,...v.items.map(x=>Number(x.value)||0));
+    return `<div class="evi-graphic evi-odds" role="img" aria-label="에너지 불안정과 정신건강 연관성"><div>${v.items.map(x=>`<article><span>${escapeHtml(x.label)}</span><div class="evi-odds-track"><i style="width:${Math.max(10,Math.round((Number(x.value)||0)/max*100))}%"></i></div><b>${escapeHtml(x.display)}</b></article>`).join('')}</div><small>${escapeHtml(v.note||'')}</small></div>`;
+  }
+  if(v.type==='timeline'){
+    return `<div class="evi-graphic evi-timeline" role="img" aria-label="${escapeAttr(v.value+' '+v.label)}"><div class="evi-time-chip">${escapeHtml(v.value)}</div><div><b>${escapeHtml(v.label||'')}</b><p>${escapeHtml(v.note||'')}</p></div></div>`;
+  }
+  return e.highlight?`<div class="evidence-highlight"><b>${escapeHtml(e.highlight.value)}</b><span>${escapeHtml(e.highlight.label)}</span></div>`:'';
+}
 function evidenceCard(e){
   const sourceLink=e.url?`<a class="source-button" href="${escapeAttr(e.url)}" target="_blank" rel="noopener noreferrer">원출처 열기 ↗</a>`:'<span class="source-button disabled">내부 제품 규칙</span>';
   return `<article class="evidence-card" id="ev-${escapeAttr(e.id)}" data-evidence-id="${escapeAttr(e.id)}">
     <div class="evidence-card-head"><div><span class="source-type">${escapeHtml(e.source_type)}</span>${scopeBadge(e.scope)}</div><code>${escapeHtml(e.id)}</code></div>
-    <h2>${escapeHtml(e.title)}</h2>${e.highlight?`<div class="evidence-highlight"><b>${escapeHtml(e.highlight.value)}</b><span>${escapeHtml(e.highlight.label)}</span></div>`:''}<p class="claim">${escapeHtml(e.claim)}</p>
+    <h2>${escapeHtml(e.title)}</h2>${evidenceVisual(e)}<p class="claim">${escapeHtml(e.claim)}</p>
     <dl class="evidence-meta"><div><dt>발행</dt><dd>${escapeHtml(e.publisher)} · ${e.year}</dd></div>${e.authors?`<div><dt>저자/기관</dt><dd>${escapeHtml(e.authors)}</dd></div>`:''}${e.doi?`<div><dt>DOI</dt><dd>${escapeHtml(e.doi)}</dd></div>`:''}<div><dt>Evidence level</dt><dd>${escapeHtml(e.evidence_level)}</dd></div><div><dt>검증일</dt><dd>${escapeHtml(e.verified_at)}</dd></div></dl>
     <div class="implication"><b>와트가드에는 이렇게 적용</b><p>${escapeHtml(e.product_implication)}</p></div>
     <div class="limitation"><b>한계 / 과장 금지선</b><p>${escapeHtml(e.limitations)}</p></div>
@@ -255,8 +285,8 @@ async function runCaptureTour(){
     showCaptureApp(detailView,'detail','왜 알렸는지 · 얼마나 더 썼는지 · 무엇부터 볼지 설명합니다','detail-top'); await delay(3600);
     $('.evidence-inline')?.scrollIntoView({behavior:'smooth',block:'center'}); setCaptureMeta('detail-evidence','판단 기준과 관련 근거를 알림에서 바로 추적합니다'); await delay(3600);
 
-    showCaptureApp(evidenceView,'evidence','논문 · 공공기관 · 제품 규칙 · 한계를 구분해 공개합니다','evidence-registry');
-    await delay(500);document.querySelector('[data-evidence-id="TECH-AE-2021-001"]')?.scrollIntoView({behavior:'smooth',block:'start'});await delay(4000);
+    showCaptureApp(evidenceView,'evidence','숫자는 출처와 한계를 붙이고, 한눈에 보이는 인포그래픽으로 함께 보여줍니다','evidence-registry');
+    await delay(500);document.querySelector('[data-evidence-id="MARKET-GMR-2024-001"]')?.scrollIntoView({behavior:'smooth',block:'start'});await delay(4000);
 
     state.demoStep='resolved';
     showCaptureApp(homeView,'home','확인·조치 후 평소 범위로 돌아왔는지 다시 확인합니다','home-recovered'); await delay(3500);
