@@ -7,7 +7,7 @@ const money = (n) => `${Math.round(Number(n)||0).toLocaleString('ko-KR')}원`;
 const kwh = (n) => `${Number(n||0).toFixed(2)} kWh`;
 const kw = (n) => `${Number(n||0).toFixed(2)} kW`;
 const pct = (n) => `${n>=0?'+':''}${Number(n||0).toFixed(1)}%`;
-const brandIcon = (stateName='normal', cls='') => `<img class="brand-icon ${cls}" src="./assets/icons/state-${stateName}.svg" alt="">`;
+const brandIcon = (stateName='normal', cls='') => `<img class="brand-icon ${cls}" src="./assets/icons/state-${stateName}.webp" alt="">`;
 const delay = (ms) => new Promise(resolve=>setTimeout(resolve,ms));
 
 const DEFAULT_STORE={id:'store-mokdong-demo',name:'목동 데모카페',type:'카페',openTime:'09:00',closeTime:'22:00',holidays:[0],pricePerKwh:190};
@@ -267,9 +267,11 @@ async function runCaptureTour(){
   try{
     state.store={...DEFAULT_STORE,name:'와트가드 데모매장',type:'무인점포'};
     state.actions=[];state.alerts=[];
-    showCaptureSplash({icon:'normal',scene:'intro-normal',title:'',subtitle:'',theme:'dark'}); await delay(700);
-    showCaptureSplash({icon:'drift',scene:'intro-drift',title:'평소와 다른 전력이',subtitle:'조용히 시작됩니다',theme:'dark'}); await delay(950);
-    showCaptureSplash({icon:'attention',scene:'intro-attention',title:'와트가드',subtitle:'새는 전력을 먼저 발견합니다',theme:'dark',footer:'평소 → 벗어남 → 확인 필요'}); await delay(1500);
+    $('#app').innerHTML='<section class="capture-splash dark capture-black"></section>'; setCaptureMeta('intro-black',''); await delay(300);
+    showCaptureSplash({icon:'normal',scene:'intro-normal',title:'',subtitle:'',theme:'dark'}); await delay(1300);
+    showCaptureSplash({icon:'drift',scene:'intro-drift',title:'평소와 다른 전력이',subtitle:'조용히 시작됩니다',theme:'dark'}); await delay(1200);
+    showCaptureSplash({icon:'attention',scene:'intro-attention',title:'와트가드',subtitle:'새는 전력을 먼저 발견합니다',theme:'dark',footer:'평소 → 벗어남 → 확인 필요'}); await delay(1200);
+    $('#app').innerHTML='<section class="capture-splash dark capture-black"></section>'; setCaptureMeta('intro-to-app',''); await delay(200);
 
     state.scenario='A';state.demoStep='full';
     showCaptureApp(learningView,'learning','14일의 평소 패턴을 먼저 학습합니다','learning-baseline'); await delay(3300);
@@ -292,9 +294,9 @@ async function runCaptureTour(){
     showCaptureApp(homeView,'home','확인·조치 후 평소 범위로 돌아왔는지 다시 확인합니다','home-recovered'); await delay(3500);
 
     document.body.classList.remove('capture-tour-active');
-    showCaptureSplash({icon:'attention',scene:'outro-attention',title:'낭비를 발견하고',subtitle:'원인 후보와 점검 순서를 확인합니다',theme:'light'}); await delay(1000);
-    showCaptureSplash({icon:'drift',scene:'outro-drift',title:'조치한 뒤 다시 확인하고',subtitle:'평소 패턴으로 돌아오는지 지켜봅니다',theme:'light'}); await delay(1050);
-    showCaptureSplash({icon:'recovered',scene:'outro-recovered',title:'다시, 평소대로',subtitle:'와트가드가 새는 전력의 시작을 먼저 살핍니다',theme:'light',footer:'평소 → 변화 감지 → 점검 → 정상 복귀'}); await delay(2600);
+    showCaptureSplash({icon:'attention',scene:'outro-attention',title:'낭비를 발견하고',subtitle:'원인 후보와 점검 순서를 확인합니다',theme:'light'}); await delay(1600);
+    showCaptureSplash({icon:'drift',scene:'outro-drift',title:'조치한 뒤 다시 확인하고',subtitle:'평소 패턴으로 돌아오는지 지켜봅니다',theme:'light'}); await delay(1200);
+    showCaptureSplash({icon:'recovered',scene:'outro-recovered',title:'다시, 평소대로',subtitle:'와트가드가 새는 전력의 시작을 먼저 살핍니다',theme:'light',footer:'평소 → 변화 감지 → 점검 → 정상 복귀'}); await delay(3200);
   } finally {
     restoreCaptureSnapshot(snapshot);
     state.route='demo-capture';
