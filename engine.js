@@ -159,7 +159,7 @@ export function analyzeEnergy({baselineReadings, currentReadings, store, config 
     profileSize: profile.size,
     rows,
     level,
-    label: level === 'ATTENTION' ? '확인 필요' : level === 'WATCH' ? '주의' : '평상',
+    label: level === 'ATTENTION' ? '확인 필요' : level === 'WATCH' ? '주의' : '정상',
     message: statusMessage({level, resolved, last, activeRun}),
     activeAnomaly,
     resolved,
