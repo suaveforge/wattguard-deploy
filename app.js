@@ -269,11 +269,10 @@ async function runCaptureTour(){
     restoreCaptureSnapshot(snapshot);
     state.route='demo-capture';
     document.body.classList.remove('capture-tour-active');
-    $('#app').innerHTML=captureView();
-    $('#app').dataset.captureScene='complete';
-    $('#app').dataset.captureCaption='시연 완료';
-    $('#app').dataset.captureState='complete';
-    bind();
+    const root=$('#app');
+    root.dataset.captureScene='outro-recovered';
+    root.dataset.captureCaption='다시, 평소대로';
+    root.dataset.captureState='complete';
     window.__WATTGUARD_CAPTURE_DONE__=true;
     captureRunning=false;
   }
