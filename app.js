@@ -63,18 +63,20 @@ function homeView(){
   const {analysis,current}=dataset(); maybeRecordAlert(analysis);
   const last=current.at(-1);
   const lastTime=last?new Date(last.timestamp).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'-';
+  const isAlert=analysis.level!=='NORMAL';
+  const isRecovered=analysis.level==='NORMAL'&&state.demoStep==='resolved';
   return appShell(`
-    <section class="status-card ${statusClass(analysis.level)}">
+    <section class="status-card ${statusClass(analysis.level)} ${isRecovered?'recovered':''}">
       <div class="eyebrow">현재 상태 · ${lastTime}</div>
-      <div class="status-row"><div><h1>${analysis.label}</h1><p>${analysis.message}</p></div><div class="status-orb">${analysis.level==='NORMAL'?'✓':analysis.level==='WATCH'?'!':'!!'}</div></div>
-      ${analysis.level!=='NORMAL'?`<div class="loss-highlight"><span>현재까지 추정 낭비</span><strong>${money(analysis.extraCost)}</strong><small>${kwh(analysis.wasteKwh)} · 입력한 평균 전력단가 기준 추정</small></div>`:''}
+      <div class="status-row"><div><h1>${analysis.label}</h1><p>${analysis.message}</p></div><div class="status-orb" aria-hidden="true"><span>${analysis.level==='NORMAL'?'✓':analysis.level==='WATCH'?'!':'!!'}</span></div></div>
+      ${isAlert?`<div class="loss-highlight impact-loss"><span>현재까지 추정 낭비</span><strong class="impact-number">${money(analysis.extraCost)}</strong><small>${kwh(analysis.wasteKwh)} · 입력한 평균 전력단가 기준 추정</small></div>`:''}
     </section>
 
-    <section class="metric-grid">
-      ${metric('현재 사용전력',kw(analysis.currentKw),'지금')}
-      ${metric('평소 사용전력',kw(analysis.expectedKw),'같은 요일군·시간대')}
-      ${metric('평소 대비',pct(analysis.relativePct),analysis.durationMinutes?`${formatDuration(analysis.durationMinutes)} 지속`:'평소 범위')}
-      ${metric('월 환산 추정',money(analysis.monthlyCost),'같은 패턴이 매일 반복될 경우')}
+    <section class="metric-grid ${isAlert?'metric-grid-alert':'metric-grid-normal'}">
+      ${metric('현재 사용전력',kw(analysis.currentKw),'지금',isAlert?'impact-current':'')}
+      ${metric('평소 사용전력',kw(analysis.expectedKw),'같은 요일군·시간대','baseline-metric')}
+      ${metric('평소 대비',pct(analysis.relativePct),analysis.durationMinutes?`${formatDuration(analysis.durationMinutes)} 지속`:'평소 범위',isAlert?'impact-delta':'impact-normal')}
+      ${metric('월 환산 추정',money(analysis.monthlyCost),'같은 패턴이 매일 반복될 경우',isAlert?'impact-cost':'')}
     </section>
 
     <section class="panel"><div class="panel-head"><div><h2>오늘 전력 흐름</h2><p>평소 범위와 오늘 사용량을 겹쳐 봅니다.</p></div><a href="#/history">자세히</a></div>${chartSvg(analysis.rows)}</section>
@@ -89,21 +91,22 @@ function homeView(){
 }
 
 function whyText(a){
-  if(a.level==='NORMAL') return `<p>현재 전력 사용은 우리 매장의 같은 요일군·시간대 평소 범위 안에 있습니다.</p>`;
-  return `<p>같은 요일군·시간대의 평소 사용전력은 <strong>${kw(a.expectedKw)}</strong>인데, 지금은 <strong>${kw(a.currentKw)}</strong>입니다. ${a.durationMinutes?`이 차이가 <strong>${formatDuration(a.durationMinutes)}</strong> 이어졌습니다.`:''}</p><div class="why-stats"><span>평소 대비 <b>${pct(a.relativePct)}</b></span><span>추가 사용 <b>${kwh(a.wasteKwh)}</b></span></div>`;
+  if(a.level==='NORMAL') return `<p class="why-normal">현재 전력 사용은 우리 매장의 <strong class="normal-word">평소 범위</strong> 안에 있습니다.</p>`;
+  return `<p class="why-alert">같은 요일군·시간대의 평소 사용전력은 <strong class="baseline-value">${kw(a.expectedKw)}</strong>인데, 지금은 <strong class="current-value">${kw(a.currentKw)}</strong>입니다. ${a.durationMinutes?`이 차이가 <strong class="duration-value">${formatDuration(a.durationMinutes)}</strong> 이어졌습니다.`:''}</p><div class="why-stats"><span>평소 대비 <b class="delta-value">${pct(a.relativePct)}</b></span><span>추가 사용 <b class="waste-value">${kwh(a.wasteKwh)}</b></span></div>`;
 }
 
-function metric(label,value,sub){return `<article class="metric"><span>${label}</span><strong>${value}</strong><small>${sub}</small></article>`;}
+function metric(label,value,sub,tone=''){return `<article class="metric ${tone}"><span>${label}</span><strong>${value}</strong><small>${sub}</small></article>`;}
 
 function chartSvg(rows){
   const data=rows.filter((_,i)=>i%2===0); if(!data.length) return '<div class="empty">데이터 없음</div>';
+  const hasAnomaly=data.some(r=>r.anomalous);
   const w=760,h=230,p=28; const max=Math.max(5,...data.map(r=>Math.max(r.actual,r.high)))*1.08;
   const x=i=>p+(w-2*p)*(i/(data.length-1||1)); const y=v=>h-p-(h-2*p)*(v/max);
   const line=field=>data.map((r,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(r[field]).toFixed(1)}`).join(' ');
   const bandTop=data.map((r,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(r.high).toFixed(1)}`).join(' ');
   const bandBottom=[...data].reverse().map((r,ii)=>{const i=data.length-1-ii; return `L${x(i).toFixed(1)},${y(r.low).toFixed(1)}`;}).join(' ');
   const anomalies=data.map((r,i)=>r.anomalous?`<circle cx="${x(i)}" cy="${y(r.actual)}" r="3.8" class="anomaly-dot"/>`:'' ).join('');
-  return `<div class="chart-wrap"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="평소 범위와 오늘 전력 사용량 그래프"><path class="range" d="${bandTop} ${bandBottom} Z"/><path class="expected" d="${line('expected')}"/><path class="actual" d="${line('actual')}"/>${anomalies}<line x1="${p}" y1="${h-p}" x2="${w-p}" y2="${h-p}" class="axis"/></svg><div class="legend"><span><i class="lg range-lg"></i>평소 범위</span><span><i class="lg expected-lg"></i>평소</span><span><i class="lg actual-lg"></i>오늘</span><span><i class="lg anomaly-lg"></i>이상 구간</span></div></div>`;
+  return `<div class="chart-wrap ${hasAnomaly?'has-anomaly':''}"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="평소 범위와 오늘 전력 사용량 그래프"><path class="range" d="${bandTop} ${bandBottom} Z"/><path class="expected" d="${line('expected')}"/><path class="actual" d="${line('actual')}"/>${anomalies}<line x1="${p}" y1="${h-p}" x2="${w-p}" y2="${h-p}" class="axis"/></svg><div class="legend"><span><i class="lg range-lg"></i>평소 범위</span><span><i class="lg expected-lg"></i>평소</span><span><i class="lg actual-lg"></i>오늘</span><span><i class="lg anomaly-lg"></i>이상 구간</span></div></div>`;
 }
 
 function detailView(){
@@ -111,12 +114,12 @@ function detailView(){
   const ev=analysis.event;
   const anomalous=analysis.rows.filter(r=>r.anomalous);
   return appShell(`<section class="page-title"><h1>이상 상세</h1><p>왜 알렸는지, 얼마가 더 쓰였는지, 무엇부터 확인할지 한 화면에서 봅니다.</p></section>
-    <section class="status-card ${statusClass(analysis.level)}"><div class="eyebrow">현재 판정</div><div class="status-row"><div><h1>${analysis.label}</h1><p>${analysis.message}</p></div><div class="status-orb">${analysis.level==='NORMAL'?'✓':analysis.level==='WATCH'?'!':'!!'}</div></div></section>
-    <section class="metric-grid">
-      ${metric('평소 대비',pct(analysis.relativePct),analysis.durationMinutes?`${formatDuration(analysis.durationMinutes)} 지속`:'현재 정상')}
-      ${metric('추가 사용량',kwh(analysis.wasteKwh),'actual − expected 누적')}
-      ${metric('오늘 추가비용',money(analysis.extraCost),'입력한 평균 전력단가 기준')}
-      ${metric('월 환산',money(analysis.monthlyCost),'같은 패턴이 매일 반복된다는 가정')}
+    <section class="status-card ${statusClass(analysis.level)} detail-status"><div class="eyebrow">현재 판정</div><div class="status-row"><div><h1>${analysis.label}</h1><p>${analysis.message}</p></div><div class="status-orb" aria-hidden="true"><span>${analysis.level==='NORMAL'?'✓':analysis.level==='WATCH'?'!':'!!'}</span></div></div></section>
+    <section class="metric-grid metric-grid-alert">
+      ${metric('평소 대비',pct(analysis.relativePct),analysis.durationMinutes?`${formatDuration(analysis.durationMinutes)} 지속`:'현재 정상','impact-delta')}
+      ${metric('추가 사용량',kwh(analysis.wasteKwh),'actual − expected 누적','impact-current')}
+      ${metric('오늘 추가비용',money(analysis.extraCost),'입력한 평균 전력단가 기준','impact-cost')}
+      ${metric('월 환산',money(analysis.monthlyCost),'같은 패턴이 매일 반복된다는 가정','impact-cost monthly')}
     </section>
     <section class="panel explain"><div class="panel-head"><div><h2>왜 이 알림이 발생했나요?</h2><p>판정에 실제로 사용한 신호와 제품 규칙입니다.</p></div><a href="#/evidence">전체 근거</a></div>${whyText(analysis)}${decisionTrace(analysis)}<div class="evidence-inline"><h3>관련 근거</h3>${evidenceMini(evidenceFor(['baseline','anomaly_detection','duration','cause_priority','cost_estimate']).slice(0,4))}<a class="secondary evidence-more" href="#/evidence">관련 근거 전체 보기</a></div></section>
     <section class="panel"><h2>먼저 확인해 보세요</h2>${analysis.causes.length?`<ol class="check-list">${analysis.causes.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ol>`:'<p class="muted">현재 점검할 이상이 없습니다.</p>'}<p class="boundary-note"><b>안전경계</b> 매장 전체 전력만으로 특정 설비 고장이나 전기화재 위험을 확정하지 않습니다. 점검 우선순위만 제공합니다.</p></section>
@@ -230,25 +233,56 @@ function captureView(){
 }
 
 let captureRunning=false;
+function captureRemoveCaption(){
+  const root=$('#app');
+  if(!root)return;
+  root.classList.remove('capture-caption-active','capture-caption-show','caption-top','caption-bottom');
+  delete root.dataset.captureCaption;
+  root.style.removeProperty('--capture-caption-top');
+}
 function setCaptureMeta(scene,caption=''){
   const root=$('#app');
   if(!root)return;
   root.dataset.captureScene=scene;
-  root.dataset.captureCaption=caption;
   root.dataset.captureState='running';
+  if(caption)root.dataset.captureCaption=caption;else delete root.dataset.captureCaption;
+}
+async function captureShowCaption(caption,hold=1000,position='bottom'){
+  captureRemoveCaption();
+  const root=$('#app');
+  if(!root||!caption)return 0;
+  const pos=position==='top'?'top':'bottom';
+  root.dataset.captureCaption=caption;
+  root.style.setProperty('--capture-caption-top',(pos==='top'?76:Math.max(118,window.innerHeight-104))+'px');
+  root.classList.add('capture-caption-active','caption-'+pos);
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  root.classList.add('capture-caption-show');
+  const live=Math.max(1400,Number(hold)||0);
+  await delay(live);
+  root.classList.remove('capture-caption-show');
+  await delay(1500);
+  captureRemoveCaption();
+  return live+1500;
 }
 function showCaptureSplash({icon='normal',scene,title='',subtitle='',theme='dark',footer=''}){
   const root=$('#app');
+  captureRemoveCaption();
   root.innerHTML=`<section class="capture-splash ${theme}"><div class="capture-splash-inner">${brandIcon(icon,'capture-splash-icon')}<div class="capture-splash-copy"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div>${footer?`<div class="capture-splash-footer">${escapeHtml(footer)}</div>`:''}</div></section>`;
-  setCaptureMeta(scene,title);
+  setCaptureMeta(scene,'');
 }
-function showCaptureApp(viewFn,route,caption,scene){
+function showCaptureApp(viewFn,route,scene){
+  captureRemoveCaption();
   state.route=route;
   $('#app').innerHTML=viewFn();
   bind();
   document.body.classList.add('capture-tour-active');
   window.scrollTo(0,0);
-  setCaptureMeta(scene,caption);
+  setCaptureMeta(scene,'');
+}
+async function showCaptureAppScene(viewFn,route,caption,scene,hold=1000,position='bottom'){
+  showCaptureApp(viewFn,route,scene);
+  await delay(120);
+  await captureShowCaption(caption,hold,position);
 }
 function captureSnapshot(){
   const keys=['wattguardStore','wattguardScenario','wattguardStep','wattguardActions','wattguardAlerts'];
@@ -274,24 +308,24 @@ async function runCaptureTour(){
     $('#app').innerHTML='<section class="capture-splash dark capture-black"></section>'; setCaptureMeta('intro-to-app',''); await delay(200);
 
     state.scenario='A';state.demoStep='full';
-    showCaptureApp(learningView,'learning','14일의 평소 패턴을 먼저 학습합니다','learning-baseline'); await delay(3300);
-    showCaptureApp(homeView,'home','지금 전력이 평소 범위인지 바로 확인합니다','home-normal'); await delay(3000);
+    await showCaptureAppScene(learningView,'learning','14일의 평소 패턴을 먼저 학습합니다','learning-baseline',900,'bottom');
+    await showCaptureAppScene(homeView,'home','지금 전력이 평소 범위인지 바로 확인합니다','home-normal',850,'bottom');
 
     state.scenario='B';state.demoStep='start';
-    showCaptureApp(homeView,'home','폐점 후 평소보다 높은 전력이 30분째 이어집니다','anomaly-start'); await delay(3500);
+    await showCaptureAppScene(homeView,'home','폐점 후 · 평소보다 높은 전력이 30분째 이어집니다','anomaly-start',1050,'bottom');
     state.demoStep='watch';
-    showCaptureApp(homeView,'home','차이가 이어지면 주의 상태로 추적합니다','anomaly-watch'); await delay(3800);
+    await showCaptureAppScene(homeView,'home','차이가 계속되면 · 주의 상태로 추적합니다','anomaly-watch',1050,'bottom');
     state.demoStep='attention';
-    showCaptureApp(homeView,'home','지속된 이상을 확인 필요로 올리고 예상 손실액을 보여줍니다','anomaly-attention'); await delay(4300);
+    await showCaptureAppScene(homeView,'home','이상이 지속되면 · 확인 필요 + 예상 손실액','anomaly-attention',1250,'top');
 
-    showCaptureApp(detailView,'detail','왜 알렸는지 · 얼마나 더 썼는지 · 무엇부터 볼지 설명합니다','detail-top'); await delay(3600);
-    $('.evidence-inline')?.scrollIntoView({behavior:'smooth',block:'center'}); setCaptureMeta('detail-evidence','판단 기준과 관련 근거를 알림에서 바로 추적합니다'); await delay(3600);
+    await showCaptureAppScene(detailView,'detail','왜 알렸는지 · 얼마나 더 썼는지 · 무엇부터 볼지','detail-top',1050,'top');
+    $('.evidence-inline')?.scrollIntoView({behavior:'smooth',block:'center'}); setCaptureMeta('detail-evidence',''); await delay(220); await captureShowCaption('판단 기준과 관련 근거를 알림에서 바로 추적합니다',1050,'top');
 
-    showCaptureApp(evidenceView,'evidence','숫자는 출처와 한계를 붙이고, 한눈에 보이는 인포그래픽으로 함께 보여줍니다','evidence-registry');
-    await delay(500);document.querySelector('[data-evidence-id="MARKET-GMR-2024-001"]')?.scrollIntoView({behavior:'smooth',block:'start'});await delay(4000);
+    showCaptureApp(evidenceView,'evidence','evidence-registry');
+    await delay(500);document.querySelector('[data-evidence-id="MARKET-GMR-2024-001"]')?.scrollIntoView({behavior:'smooth',block:'start'});await delay(180);await captureShowCaption('숫자는 출처·한계와 함께 · 근거는 인포그래픽으로',1100,'top');
 
     state.demoStep='resolved';
-    showCaptureApp(homeView,'home','확인·조치 후 평소 범위로 돌아왔는지 다시 확인합니다','home-recovered'); await delay(3500);
+    await showCaptureAppScene(homeView,'home','확인·조치 후 · 평소 범위 복귀까지 확인합니다','home-recovered',1050,'bottom');
 
     document.body.classList.remove('capture-tour-active');
     showCaptureSplash({icon:'attention',scene:'outro-attention',title:'낭비를 발견하고',subtitle:'원인 후보와 점검 순서를 확인합니다',theme:'light'}); await delay(1600);
