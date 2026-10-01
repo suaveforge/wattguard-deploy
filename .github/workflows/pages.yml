@@ -1,0 +1,51 @@
+name: WattGuard Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pages.yml'
+      - 'index.html'
+      - 'app.js'
+      - 'app.css'
+      - 'engine.js'
+      - 'evidence-registry.js'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'assets/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: wattguard-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage static app
+        run: |
+          set -Eeuo pipefail
+          rm -rf site
+          mkdir -p site
+          cp index.html app.js app.css engine.js evidence-registry.js manifest.webmanifest service-worker.js .nojekyll site/
+          cp -R assets site/assets
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
