@@ -58,6 +58,16 @@ function appShell(content){
 }
 function nav(route,label,icon){return `<a class="${state.route===route?'active':''}" href="#/${route}"><span>${icon}</span>${label}</a>`;}
 
+function evidenceShell(content){
+  return `<div class="app-shell evidence-shell">
+    <header class="topbar evidence-topbar">
+      <a href="#/home" class="brand"><span class="brand-mark">${brandIcon('normal')}</span><span><strong>와트가드</strong><small>Evidence / 근거</small></span></a>
+      <div class="top-actions"><span class="evidence-verified">원출처 검증 · 2026-10-02</span></div>
+    </header>
+    <main id="main" class="page evidence-page">${content}</main>
+  </div>`;
+}
+
 function statusClass(level){return level==='ATTENTION'?'attention':level==='WATCH'?'watch':'normal';}
 
 function homeView(){
@@ -214,7 +224,7 @@ function evidenceView(){
   const groups=Object.keys(EVIDENCE_CATEGORIES).map(key=>`<button class="evidence-filter" data-ev-filter="${key}"><span>${EVIDENCE_CATEGORIES[key]}</span><b>${categoryCount(key)}</b></button>`).join('');
   const cards=EVIDENCE_REGISTRY.map(e=>evidenceCard(e)).join('');
   setTimeout(()=>{if(hashId){document.querySelector(`[data-evidence-id="${CSS.escape(hashId)}"]`)?.scrollIntoView({behavior:'smooth',block:'start'});}},0);
-  return appShell(`<section class="page-title evidence-title"><div><span class="eyebrow">Evidence registry · verified 2026-10-02</span><h1>왜 이 신호를 보고,<br>왜 이렇게 판단하나요?</h1><p>시장자료 · 연구근거 · 현재 구현 · 향후 계획 · 안전경계를 섞지 않고 각각 추적합니다.</p></div><div class="evidence-summary"><b>${EVIDENCE_REGISTRY.length}</b><span>등록 근거</span><small>외부 출처 + 제품 규칙</small></div></section>
+  return evidenceShell(`<section class="page-title evidence-title"><div><span class="eyebrow">Evidence registry · verified 2026-10-02</span><h1>왜 이 신호를 보고,<br>왜 이렇게 판단하나요?</h1><p>시장자료 · 연구근거 · 현재 구현 · 향후 계획 · 안전경계를 섞지 않고 각각 추적합니다.</p></div><div class="evidence-summary"><b>${EVIDENCE_REGISTRY.length}</b><span>등록 근거</span><small>외부 출처 + 제품 규칙</small></div></section>
     <section class="evidence-principles"><div><b>원출처 우선</b><span>외부 수치에는 출처를 붙입니다.</span></div><div><b>원인 확정 금지</b><span>설비 고장이 아니라 점검 우선순위입니다.</span></div><div><b>구현과 계획 분리</b><span>현재 연결된 것과 향후 연동을 구분합니다.</span></div></section>
     <section class="evidence-filters"><button class="evidence-filter active" data-ev-filter="ALL"><span>전체</span><b>${EVIDENCE_REGISTRY.length}</b></button>${groups}</section>
     <section class="evidence-list" id="evidence-list">${cards}</section>`);
@@ -391,8 +401,9 @@ function render(){
     }
     return;
   }
+  if(state.route==='evidence'){ $('#app').innerHTML=evidenceView(); bind(); return; }
   if(!state.store){onboarding();return;}
-  const views={home:homeView,detail:detailView,history:historyView,alerts:alertsView,settings:settingsView,demo:demoView,evidence:evidenceView,learning:learningView};
+  const views={home:homeView,detail:detailView,history:historyView,alerts:alertsView,settings:settingsView,demo:demoView,learning:learningView};
   $('#app').innerHTML=(views[state.route]||homeView)(); bind();
 }
 
