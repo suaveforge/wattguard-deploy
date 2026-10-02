@@ -415,3 +415,17 @@
 .capture-splash-inner.capture-stage-enter .capture-splash-icon{
   animation:none!important;
 }
+
+
+/* Standalone production Evidence page */
+.evidence-shell .evidence-page{padding-bottom:34px}
+.evidence-shell .evidence-topbar{position:sticky;top:0;z-index:50}
+.evidence-shell .evidence-verified{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 11px;border:1px solid #cfe0da;border-radius:999px;
+  background:#f5faf8;color:#31584c;font-size:12px;font-weight:800;white-space:nowrap
+}
+.evidence-shell .evidence-verified::before{content:"✓";font-weight:950;color:#15725b}
+@media(max-width:520px){
+  .evidence-shell .evidence-verified{font-size:11px;padding:7px 9px}
+}
