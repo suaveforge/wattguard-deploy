@@ -52,7 +52,7 @@ function appShell(content){
     </header>
     <main id="main" class="page">${content}</main>
     <nav class="bottom-nav" aria-label="주요 메뉴">
-      ${nav('home','홈','⌂')}${nav('history','히스토리','▥')}${nav('alerts','알림','◉')}${nav('settings','설정','⚙')}${nav('demo','데모','▶')}
+      ${nav('home','홈','⌂')}${nav('history','히스토리','▥')}${nav('alerts','알림','◉')}${nav('settings','설정','⚙')}
     </nav>
   </div>`;
 }
@@ -76,28 +76,40 @@ function homeView(){
   const lastTime=last?new Date(last.timestamp).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'-';
   const isAlert=analysis.level!=='NORMAL';
   const isRecovered=analysis.level==='NORMAL'&&state.demoStep==='resolved';
+  const deltaText=isAlert?pct(analysis.relativePct):'정상 범위';
   return appShell(`
-    <section class="status-card ${statusClass(analysis.level)} ${isRecovered?'recovered':''}">
-      <div class="eyebrow">현재 상태 · ${lastTime}</div>
-      <div class="status-row"><div><h1>${analysis.label}</h1><p>${analysis.message}</p></div><div class="status-orb" aria-hidden="true"><span>${analysis.level==='NORMAL'?'✓':analysis.level==='WATCH'?'!':'!!'}</span></div></div>
-      ${isAlert?`<div class="loss-highlight impact-loss"><span>현재까지 추정 낭비</span><strong class="impact-number">${money(analysis.extraCost)}</strong><small>${kwh(analysis.wasteKwh)} · 입력한 평균 전력단가 기준 추정</small></div>`:''}
-    </section>
+    <div class="home-dashboard ${isAlert?'is-alert':'is-normal'}">
+      <section class="status-card home-status ${statusClass(analysis.level)} ${isRecovered?'recovered':''}">
+        <div class="home-status-top">
+          <div>
+            <div class="eyebrow">현재 상태 · ${lastTime}</div>
+            <h1>${analysis.label}</h1>
+          </div>
+          <div class="status-orb" aria-hidden="true"><span>${analysis.level==='NORMAL'?'✓':analysis.level==='WATCH'?'!':'!!'}</span></div>
+        </div>
+        <p class="home-status-message">${analysis.message}</p>
+        ${isAlert?`<div class="home-loss"><span>추정 누수비용</span><strong>${money(analysis.extraCost)}</strong><em>월 환산 ${money(analysis.monthlyCost)}</em></div>`:
+        `<div class="home-normal-line"><span>현재 전력은 평소 범위 안입니다.</span><b>누수 0</b></div>`}
+      </section>
 
-    <section class="metric-grid ${isAlert?'metric-grid-alert':'metric-grid-normal'}">
-      ${metric('현재 사용전력',kw(analysis.currentKw),'지금',isAlert?'impact-current':'')}
-      ${metric('평소 사용전력',kw(analysis.expectedKw),'같은 요일군·시간대','baseline-metric')}
-      ${metric('평소 대비',pct(analysis.relativePct),analysis.durationMinutes?`${formatDuration(analysis.durationMinutes)} 지속`:'평소 범위',isAlert?'impact-delta':'impact-normal')}
-      ${metric('월 환산 추정',money(analysis.monthlyCost),'같은 패턴이 매일 반복될 경우',isAlert?'impact-cost':'')}
-    </section>
+      <section class="home-compare" aria-label="현재 전력 비교">
+        <div><span>현재</span><strong>${kw(analysis.currentKw)}</strong></div>
+        <div class="compare-arrow">→</div>
+        <div><span>평소</span><strong>${kw(analysis.expectedKw)}</strong></div>
+        <div class="compare-delta ${isAlert?'alert':'normal'}"><span>평소 대비</span><strong>${deltaText}</strong>${analysis.durationMinutes?`<small>${formatDuration(analysis.durationMinutes)} 지속</small>`:''}</div>
+      </section>
 
-    <section class="panel"><div class="panel-head"><div><h2>오늘 전력 흐름</h2><p>평소 범위와 오늘 사용량을 겹쳐 봅니다.</p></div><a href="#/history">자세히</a></div>${chartSvg(analysis.rows)}</section>
+      <section class="home-chart-card">
+        <div class="home-chart-head"><div><b>오늘 전력 흐름</b><span>평소 범위와 현재 사용량</span></div><a href="#/history">전체</a></div>
+        ${chartSvg(analysis.rows)}
+      </section>
 
-    <section class="panel explain"><h2>왜 알렸나요?</h2>${whyText(analysis)}<div class="evidence-inline"><h3>숫자와 판단의 근거</h3>${evidenceMini(evidenceFor(['market_growth','refrigeration','case_savings','energy_burden','anomaly_detection']).slice(0,3))}<a class="secondary evidence-more" href="#/evidence">Evidence 전체 보기</a></div></section>
-
-    <section class="panel"><h2>먼저 확인해 보세요</h2>${analysis.causes.length?`<ol class="check-list">${analysis.causes.slice(0,4).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ol>`:'<p class="muted">현재는 평소 범위라 점검할 항목이 없습니다.</p>'}
-      ${analysis.level!=='NORMAL'?`<div class="action-row"><a class="secondary wide" href="#/detail">이상 상세보기</a><button class="primary wide" id="action-complete">확인·조치 완료</button></div>`:''}
-    </section>
-    <div class="source-note">분석 기준: 14일 데모 baseline · 요일군 + 15분 시간슬롯 + 영업 여부 · median 기반</div>
+      <section class="home-actions">
+        ${isAlert
+          ? `<a class="secondary home-detail" href="#/detail">왜 알렸는지 보기</a><button class="primary home-action" id="action-complete">확인·조치 완료</button>`
+          : `<a class="secondary home-detail single" href="#/detail">상세 상태 보기</a>`}
+      </section>
+    </div>
   `);
 }
 
@@ -386,6 +398,7 @@ function onboarding(){
 }
 
 function render(){
+  document.body.dataset.route=state.route;
   document.body.classList.toggle('capture-mode',state.route==='demo-capture');
   if(state.route==='demo-capture'){
     if(CAPTURE_AUTO){
