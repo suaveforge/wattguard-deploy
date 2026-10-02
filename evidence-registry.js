@@ -52,7 +52,7 @@ export const EVIDENCE_REGISTRY = Object.freeze([
   {
     id:'MARKET-NFA-2023-001', category:'MARKET',
     claim:'소방청은 무인점포 증가에 따라 현황조사와 업종별 안전관리 필요성을 검토·강화해 왔다.',
-    title:'소방청, 무인점포 현황조사 및 다중이용업 지정 검토 추진', publisher:'소방청', authors:'소방청', year:2023,
+    title:'소방청, 무인점포 현황조사 및 다중이용업 지정 검토 추진', publisher:'소방청', authors:'소방청', year:2022,
     source_type:'공공기관 보도자료', url:'https://www.nfa.go.kr/nfa/news/pressrelease/press/?cntId=1642&mode=view', doi:'',
     applies_to:['unmanned_store','management_need'],
     product_implication:'무인 운영환경에서 원격 관리 필요성이 존재한다는 배경 근거로만 사용한다.',
