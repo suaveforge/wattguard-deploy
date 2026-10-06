@@ -1,0 +1,29 @@
+name: WattGuard Water Broadcast Fetch V6
+
+on:
+  push:
+    branches: [video-build-water-v2-20261006]
+    paths:
+      - ".github/workflows/water-broadcast-v6.yml"
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python3 -m pip install --quiet --upgrade yt-dlp
+          mkdir -p out
+          set +e
+          yt-dlp --no-playlist --merge-output-format mp4 -o "out/pump.%(ext)s" "https://news.knn.co.kr/news/article/175663" >out/pump.log 2>&1
+          echo "pump=$?" > out/status.txt
+          yt-dlp --no-playlist --merge-output-format mp4 -o "out/nepal_sbs.%(ext)s" "https://news.sbs.co.kr/news/endPage.do?news_id=N1008725619" >out/nepal_sbs.log 2>&1
+          echo "nepal_sbs=$?" >> out/status.txt
+          find out -maxdepth 1 -type f -printf "%f %s bytes\n" | sort >> out/status.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wattguard-water-broadcasts-v6
+          path: out/*
+          retention-days: 1
