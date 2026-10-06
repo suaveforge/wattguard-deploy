@@ -1,0 +1,29 @@
+name: WattGuard Water Source Full V5
+
+on:
+  push:
+    branches: [video-build-water-v2-20261006]
+    paths:
+      - ".github/workflows/water-source-v5.yml"
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+          python3 -m pip install --quiet --upgrade yt-dlp
+          mkdir -p out
+          curl -L --fail --retry 3 -o out/nepal.webm "https://upload.wikimedia.org/wikipedia/commons/f/fe/Mudslide_at_Gyirong_Port_2.webm"
+          curl -L --fail --retry 3 -o out/brazil.webm "https://upload.wikimedia.org/wikipedia/commons/9/9f/Enchente_em_Porto_Alegre_-_4MAI2024.webm"
+          yt-dlp --no-playlist --merge-output-format mp4 -o "out/sacheon.%(ext)s" "https://news.knn.co.kr/news/article/192353"
+          ffprobe -v error -show_entries format=duration,size -of default=nw=1 out/nepal.webm > out/probe.txt
+          ffprobe -v error -show_entries format=duration,size -of default=nw=1 out/brazil.webm >> out/probe.txt
+          ffprobe -v error -show_entries format=duration,size -of default=nw=1 out/sacheon.mp4 >> out/probe.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wattguard-water-full-sources-v5
+          path: out/*
+          retention-days: 1
