@@ -1,0 +1,124 @@
+name: WattGuard Water News Cut V3
+
+on:
+  push:
+    branches: [video-build-water-v2-20261006]
+    paths:
+      - ".github/workflows/water-news-v3.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-cjk curl
+          python3 -m pip install --quiet --upgrade yt-dlp
+
+      - name: Download source clips
+        shell: bash
+        run: |
+          set -u
+          mkdir -p src out
+          : > out/download_status.txt
+
+          download_ytdlp () {
+            local name="$1"
+            local url="$2"
+            echo "=== $name ===" | tee -a out/download_status.txt
+            if yt-dlp --no-playlist --retries 3 --fragment-retries 3 \
+              -f "bv*[height<=720]+ba/b[height<=720]" \
+              --merge-output-format mp4 \
+              -o "src/${name}.%(ext)s" "$url" >>out/download_status.txt 2>&1; then
+              echo "OK: $name" | tee -a out/download_status.txt
+              return 0
+            else
+              echo "FAIL: $name" | tee -a out/download_status.txt
+              return 1
+            fi
+          }
+
+          # 1) Nepal: Reuters official YouTube; fallback is public-domain fixed-CCTV footage on Wikimedia.
+          download_ytdlp nepal "https://www.youtube.com/watch?v=_ttOAbKQFYE" || \
+            curl -L --fail --retry 3 -o src/nepal.webm \
+            "https://upload.wikimedia.org/wikipedia/commons/f/fe/Mudslide_at_Gyirong_Port_2.webm"
+
+          # 2) Brazil: Reuters official YouTube; fallback is CC-BY flood footage on Wikimedia.
+          download_ytdlp brazil "https://www.youtube.com/watch?v=A5v6OkMvNTM" || \
+            curl -L --fail --retry 3 -o src/brazil.webm \
+            "https://upload.wikimedia.org/wikipedia/commons/9/9f/Enchente_em_Porto_Alegre_-_4MAI2024.webm"
+
+          # 3) Gurye: actual KBC news article video.
+          download_ytdlp gurye "https://news.ikbc.co.kr/article/view/kbc202507220058" || true
+
+          # 4) Sacheon: actual KNN video report; fallback to MBC article video.
+          download_ytdlp sacheon "https://news.knn.co.kr/news/article/192353" || \
+            download_ytdlp sacheon "https://imnews.imbc.com/news/2026/society/article/6851417_36918.html" || true
+
+          echo "--- files ---" | tee -a out/download_status.txt
+          find src -maxdepth 1 -type f -printf "%f %s bytes\n" | sort | tee -a out/download_status.txt
+
+      - name: Build 34-second news front
+        shell: bash
+        run: |
+          set -euo pipefail
+          FONT="/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"
+          REG="/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
+          mkdir -p out/parts
+
+          pick_file () {
+            local stem="$1"
+            find src -maxdepth 1 -type f -name "${stem}.*" | head -n1
+          }
+
+          make_scene () {
+            local stem="$1"
+            local dur="$2"
+            local headline="$3"
+            local sub="$4"
+            local source="$5"
+            local infile
+            infile="$(pick_file "$stem" || true)"
+
+            if [[ -z "$infile" ]]; then
+              ffmpeg -y -f lavfi -i "color=c=0x101820:s=1920x1080:r=30:d=$dur" \
+                -f lavfi -i "anullsrc=r=48000:cl=stereo:d=$dur" \
+                -vf "drawtext=fontfile=$FONT:text='${headline//:/\\:}':fontcolor=white:fontsize=68:x=(w-text_w)/2:y=h*0.42,drawtext=fontfile=$REG:text='${sub//:/\\:}':fontcolor=white@0.85:fontsize=38:x=(w-text_w)/2:y=h*0.54,drawtext=fontfile=$REG:text='${source//:/\\:}':fontcolor=white@0.55:fontsize=26:x=60:y=h-70" \
+                -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest "out/parts/$stem.mp4"
+              return
+            fi
+
+            # Keep actual broadcaster/footage audio. Hard-cut style, with restrained overlay only.
+            ffmpeg -y -ss 0 -i "$infile" -t "$dur" \
+              -filter_complex "[0:v]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30,drawbox=x=0:y=0:w=iw:h=150:color=black@0.35:t=fill,drawbox=x=0:y=h-175:w=iw:h=175:color=black@0.45:t=fill,drawtext=fontfile=$FONT:text='${headline//:/\\:}':fontcolor=white:fontsize=60:x=60:y=42,drawtext=fontfile=$REG:text='${sub//:/\\:}':fontcolor=white:fontsize=34:x=60:y=h-135,drawtext=fontfile=$REG:text='${source//:/\\:}':fontcolor=white@0.68:fontsize=25:x=60:y=h-78[v];[0:a]aresample=48000,volume=1.0[a]" \
+              -map "[v]" -map "[a]" -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p -c:a aac -b:a 160k -shortest "out/parts/$stem.mp4" || \
+            ffmpeg -y -ss 0 -i "$infile" -t "$dur" \
+              -f lavfi -i "anullsrc=r=48000:cl=stereo:d=$dur" \
+              -filter_complex "[0:v]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30,drawbox=x=0:y=0:w=iw:h=150:color=black@0.35:t=fill,drawbox=x=0:y=h-175:w=iw:h=175:color=black@0.45:t=fill,drawtext=fontfile=$FONT:text='${headline//:/\\:}':fontcolor=white:fontsize=60:x=60:y=42,drawtext=fontfile=$REG:text='${sub//:/\\:}':fontcolor=white:fontsize=34:x=60:y=h-135,drawtext=fontfile=$REG:text='${source//:/\\:}':fontcolor=white@0.68:fontsize=25:x=60:y=h-78[v]" \
+              -map "[v]" -map 1:a -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p -c:a aac -b:a 128k -shortest "out/parts/$stem.mp4"
+          }
+
+          make_scene nepal 8.0 "네팔 빙하 붕괴 대홍수" "사망 1,455명 · 실종 5,285명" "Reuters / 2026.08–10"
+          make_scene brazil 8.0 "브라질 남부 대홍수" "184명 사망 · 약 240만 명 피해" "Reuters / 2024.05"
+          make_scene gurye 8.5 "1,000억 원 배수펌프장" "폭우 때 전력 문제로 제때 가동하지 못했다" "KBC 광주방송 / 2025.07"
+          make_scene sacheon 8.5 "K-water 사천정수장 정전" "비상발전기까지 고장 · 7개 시·군 급수 차질" "KNN·MBC / 2026.09"
+
+          printf "file '%s'\n" "$PWD/out/parts/nepal.mp4" "$PWD/out/parts/brazil.mp4" "$PWD/out/parts/gurye.mp4" "$PWD/out/parts/sacheon.mp4" > out/list.txt
+          ffmpeg -y -f concat -safe 0 -i out/list.txt -c copy out/WattGuard_Water_news_front_v2.mp4
+
+          ffprobe -v error -show_entries format=duration,size -of default=nw=1 out/WattGuard_Water_news_front_v2.mp4 | tee -a out/download_status.txt
+
+      - name: Upload front cut
+        uses: actions/upload-artifact@v4
+        with:
+          name: wattguard-water-news-front-v2
+          path: |
+            out/WattGuard_Water_news_front_v2.mp4
+            out/download_status.txt
+          retention-days: 1
