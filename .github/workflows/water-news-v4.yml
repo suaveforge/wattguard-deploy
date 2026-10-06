@@ -1,0 +1,102 @@
+name: WattGuard Water News Cut V4
+
+on:
+  push:
+    branches: [video-build-water-v2-20261006]
+    paths:
+      - ".github/workflows/water-news-v4.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-cjk curl
+          python3 -m pip install --quiet --upgrade yt-dlp
+
+      - name: Download source clips
+        shell: bash
+        run: |
+          set -u
+          mkdir -p src out
+          : > out/download_status.txt
+
+          download_youtubeish () {
+            local name="$1"
+            local url="$2"
+            echo "=== $name ===" | tee -a out/download_status.txt
+            if yt-dlp --no-playlist --retries 3 --fragment-retries 3 \
+              --extractor-args "youtube:player_client=tv,web_safari" \
+              --js-runtimes node --remote-components ejs:github \
+              -S "res:720" --merge-output-format mp4 \
+              -o "src/${name}.%(ext)s" "$url" >>out/download_status.txt 2>&1; then
+              echo "OK: $name" | tee -a out/download_status.txt
+              return 0
+            else
+              echo "FAIL: $name" | tee -a out/download_status.txt
+              return 1
+            fi
+          }
+
+          download_generic () {
+            local name="$1"
+            local url="$2"
+            echo "=== $name generic ===" | tee -a out/download_status.txt
+            if yt-dlp --no-playlist --retries 3 --fragment-retries 3 \
+              --merge-output-format mp4 \
+              -o "src/${name}.%(ext)s" "$url" >>out/download_status.txt 2>&1; then
+              echo "OK: $name generic" | tee -a out/download_status.txt
+              return 0
+            else
+              echo "FAIL: $name generic" | tee -a out/download_status.txt
+              return 1
+            fi
+          }
+
+          download_youtubeish nepal "https://www.youtube.com/watch?v=_ttOAbKQFYE" || \
+            curl -L --fail --retry 3 -o src/nepal.webm \
+            "https://upload.wikimedia.org/wikipedia/commons/f/fe/Mudslide_at_Gyirong_Port_2.webm"
+
+          download_youtubeish brazil "https://www.youtube.com/watch?v=A5v6OkMvNTM" || \
+            curl -L --fail --retry 3 -o src/brazil.webm \
+            "https://upload.wikimedia.org/wikipedia/commons/9/9f/Enchente_em_Porto_Alegre_-_4MAI2024.webm"
+
+          download_youtubeish gurye "https://news.ikbc.co.kr/article/view/kbc202507220058" || true
+
+          download_generic sacheon "https://news.knn.co.kr/news/article/192353" || \
+            download_generic sacheon "https://imnews.imbc.com/news/2026/society/article/6851417_36918.html" || true
+
+          echo "--- files ---" | tee -a out/download_status.txt
+          find src -maxdepth 1 -type f -printf "%f %s bytes\n" | sort | tee -a out/download_status.txt
+
+      - name: Build source contact sheet clips
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/preview
+          for stem in nepal brazil gurye sacheon; do
+            f="$(find src -maxdepth 1 -type f -name "${stem}.*" | head -n1 || true)"
+            if [[ -n "$f" ]]; then
+              ffmpeg -y -ss 0 -i "$f" -t 12 \
+                -vf "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,fps=30" \
+                -c:v libx264 -crf 22 -preset fast -c:a aac -b:a 128k -shortest "out/preview/${stem}.mp4" || \
+              ffmpeg -y -ss 0 -i "$f" -t 12 -f lavfi -i "anullsrc=r=48000:cl=stereo:d=12" \
+                -filter_complex "[0:v]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,fps=30[v]" \
+                -map "[v]" -map 1:a -c:v libx264 -crf 22 -preset fast -c:a aac -shortest "out/preview/${stem}.mp4"
+            fi
+          done
+
+      - name: Upload source preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: wattguard-water-source-preview-v4
+          path: |
+            out/preview/*.mp4
+            out/download_status.txt
+          retention-days: 1
