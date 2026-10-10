@@ -33,8 +33,11 @@ jobs:
             for(const [route,name] of routes){
               const context=await browser.newContext({viewport:{width:450,height:800},deviceScaleFactor:2,reducedMotion:'reduce'});
               const page=await context.newPage();
-              await page.goto('http://127.0.0.1:8989/#/'+route,{waitUntil:'networkidle',timeout:45000});
-              await page.waitForSelector('.app-shell',{timeout:15000});
+              page.on('pageerror',e=>console.error('PAGE ERROR',e.message));
+              page.on('console',m=>console.log('BROWSER CONSOLE',m.type(),m.text().slice(0,350)));
+              const response=await page.goto('http://127.0.0.1:8989/#/'+route,{waitUntil:'networkidle',timeout:45000});
+              console.log('HTTP',response.status(),'PAGE',await page.title(),'BODY', (await page.locator('body').innerText()).slice(0,500));
+              await page.waitForSelector('.app-shell',{state:'attached',timeout:15000});
               await page.evaluate(()=>{document.querySelectorAll('*').forEach(e=>{e.style.animation='none';e.style.transition='none'})});
               await page.screenshot({path:'opm-registration/images/'+name,fullPage:true,animations:'disabled'});
               const text=(await page.locator('#app').innerText()).slice(0,140);
