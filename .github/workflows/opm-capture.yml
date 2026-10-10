@@ -37,7 +37,9 @@ jobs:
               page.on('console',m=>console.log('BROWSER CONSOLE',m.type(),m.text().slice(0,350)));
               const response=await page.goto('http://127.0.0.1:8989/#/'+route,{waitUntil:'networkidle',timeout:45000});
               console.log('HTTP',response.status(),'PAGE',await page.title(),'BODY', (await page.locator('body').innerText()).slice(0,500));
-              await page.waitForSelector('.app-shell',{state:'attached',timeout:15000});
+              if(await page.locator('#quick-demo').count()) await page.locator('#quick-demo').click();
+              await page.evaluate(r=>{location.hash='#/'+r},route);
+              await page.waitForSelector('.app-shell',{state:'visible',timeout:15000});
               await page.evaluate(()=>{document.querySelectorAll('*').forEach(e=>{e.style.animation='none';e.style.transition='none'})});
               await page.screenshot({path:'opm-registration/images/'+name,fullPage:true,animations:'disabled'});
               const text=(await page.locator('#app').innerText()).slice(0,140);
