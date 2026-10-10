@@ -17,35 +17,43 @@ jobs:
         run: |
           npm install playwright --no-save --no-fund --no-audit
           npx playwright install --with-deps chromium
-      - name: Capture four actual app routes
+      - name: Capture six distinct actual app states
         run: |
           mkdir -p opm-registration/images
           python3 -m http.server 8989 --bind 127.0.0.1 >/tmp/wattguard-server.log 2>&1 &
           cat > /tmp/capture-opm.cjs <<'JS'
-          const { chromium } = require(process.cwd()+'/node_modules/playwright');
-          const fs=require('fs');
+          const { chromium }=require(process.cwd()+'/node_modules/playwright');
           (async()=>{
             const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
-            const routes=[
-              ['home','01_home.png'],['history','02_history.png'],
-              ['alerts','03_alerts.png'],['settings','04_settings.png']
-            ];
-            for(const [route,name] of routes){
-              const context=await browser.newContext({viewport:{width:450,height:800},deviceScaleFactor:2,reducedMotion:'reduce'});
-              const page=await context.newPage();
-              page.on('pageerror',e=>console.error('PAGE ERROR',e.message));
-              page.on('console',m=>console.log('BROWSER CONSOLE',m.type(),m.text().slice(0,350)));
-              const response=await page.goto('http://127.0.0.1:8989/#/'+route,{waitUntil:'networkidle',timeout:45000});
-              console.log('HTTP',response.status(),'PAGE',await page.title(),'BODY', (await page.locator('body').innerText()).slice(0,500));
-              if(await page.locator('#quick-demo').count()) await page.locator('#quick-demo').click();
-              await page.evaluate(r=>{location.hash='#/'+r},route);
-              await page.waitForSelector('.app-shell',{state:'visible',timeout:15000});
-              await page.evaluate(()=>{document.querySelectorAll('*').forEach(e=>{e.style.animation='none';e.style.transition='none'})});
-              await page.screenshot({path:'opm-registration/images/'+name,fullPage:true,animations:'disabled'});
-              const text=(await page.locator('#app').innerText()).slice(0,140);
-              console.log(route, name, text.replace(/\n/g,' ').slice(0,140));
-              await context.close();
+            const context=await browser.newContext({viewport:{width:450,height:870},deviceScaleFactor:2,reducedMotion:'reduce',locale:'ko-KR'});
+            const page=await context.newPage();
+            page.on('pageerror',e=>console.error('PAGE ERROR',e.message));
+            const base='http://127.0.0.1:8989/';
+            await page.goto(base+'#/home',{waitUntil:'networkidle'});
+            if(await page.locator('#quick-demo').count()) await page.locator('#quick-demo').click();
+            async function capture(file,route,scenario,step,expected){
+              await page.evaluate(({route,scenario,step})=>{
+                localStorage.setItem('wattguardScenario',scenario);
+                localStorage.setItem('wattguardStep',step);
+                location.hash='#/'+route;
+              },{route,scenario,step});
+              await page.reload({waitUntil:'networkidle'});
+              await page.waitForSelector('.app-shell',{state:'visible',timeout:20000});
+              await page.evaluate(()=>{window.scrollTo(0,0);document.querySelectorAll('*').forEach(e=>{e.style.animation='none';e.style.transition='none'})});
+              await page.waitForTimeout(250);
+              const t=(await page.locator('#app').innerText()).replace(/\s+/g,' ');
+              if(!t.includes(expected))throw Error(file+' expected '+expected+' but got '+t.slice(0,300));
+              if(file==='05_alerts.png'&&t.includes('아직 알림 기록이 없습니다'))throw Error('alerts empty');
+              const path='opm-registration/images/'+file;
+              await page.screenshot({path,fullPage:false,animations:'disabled'});
+              console.log('CAPTURE OK',file,'route=',route,'text=',t.slice(0,180));
             }
+            await capture('01_normal.png','home','A','full','현재 전력은 평소 범위 안입니다');
+            await capture('02_anomaly.png','home','B','attention','추정 누수비용');
+            await capture('03_detail.png','detail','B','attention','이상 상세');
+            await capture('04_history.png','history','B','attention','전력 사용 히스토리');
+            await capture('05_alerts.png','alerts','B','attention','알림 기록');
+            await capture('06_evidence.png','evidence','B','attention','원출처 우선');
             await browser.close();
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
@@ -56,7 +64,7 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add opm-registration/images/*.png
           if ! git diff --cached --quiet; then
-            git commit -m "Capture four genuine WattGuard app views for OPM"
+            git commit -m "Capture six distinct actual WattGuard app states for OPM"
             git push origin HEAD:main
           fi
       - name: Upload evidence
