@@ -65,7 +65,14 @@ jobs:
           git add opm-registration/images/*.png
           if ! git diff --cached --quiet; then
             git commit -m "Capture six distinct actual WattGuard app states for OPM"
-            git push origin HEAD:main
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then exit 0; fi
+              sleep 3
+            done
+            echo "Capture push failed after retries" >&2
+            exit 1
           fi
       - name: Upload evidence
         if: always()
