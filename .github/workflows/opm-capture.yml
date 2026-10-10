@@ -1,0 +1,63 @@
+name: Capture actual WattGuard app pages for OPM
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/opm-capture.yml'
+permissions:
+  contents: write
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser
+        run: |
+          npm install playwright --no-save --no-fund --no-audit
+          npx playwright install --with-deps chromium
+      - name: Capture four actual app routes
+        run: |
+          mkdir -p opm-registration/images
+          python3 -m http.server 8989 --bind 127.0.0.1 >/tmp/wattguard-server.log 2>&1 &
+          cat > /tmp/capture-opm.cjs <<'JS'
+          const { chromium } = require(process.cwd()+'/node_modules/playwright');
+          const fs=require('fs');
+          (async()=>{
+            const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+            const routes=[
+              ['home','01_home.png'],['history','02_history.png'],
+              ['alerts','03_alerts.png'],['settings','04_settings.png']
+            ];
+            for(const [route,name] of routes){
+              const context=await browser.newContext({viewport:{width:450,height:800},deviceScaleFactor:2,reducedMotion:'reduce'});
+              const page=await context.newPage();
+              await page.goto('http://127.0.0.1:8989/#/'+route,{waitUntil:'networkidle',timeout:45000});
+              await page.waitForSelector('.app-shell',{timeout:15000});
+              await page.evaluate(()=>{document.querySelectorAll('*').forEach(e=>{e.style.animation='none';e.style.transition='none'})});
+              await page.screenshot({path:'opm-registration/images/'+name,fullPage:true,animations:'disabled'});
+              const text=(await page.locator('#app').innerText()).slice(0,140);
+              console.log(route, name, text.replace(/\n/g,' ').slice(0,140));
+              await context.close();
+            }
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          node /tmp/capture-opm.cjs
+      - name: Commit screenshots to deploy repository
+        run: |
+          git config user.name 'WattGuard capture'
+          git config user.email 'actions@users.noreply.github.com'
+          git add opm-registration/images/*.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Capture four genuine WattGuard app views for OPM"
+            git push origin HEAD:main
+          fi
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: opm-actual-app-screens
+          path: opm-registration/images/
+          if-no-files-found: ignore
